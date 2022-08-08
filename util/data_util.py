@@ -5,19 +5,19 @@ import setting
 import numpy
 import pandas
 import os
-import file_util
+from util import file_util
 import constant
 from binance.spot import Spot
 
 
-def get_local_sgeneric_csv_data(symbol: str, interval: str):
+def get_local_generic_csv_data(symbol: str, interval: str):
     # 文件名称
-    file_name = symbol + interval + ".csv"
+    file_name = symbol + "_" + interval + ".csv"
     # 文件位置
     path = setting.date_root_path + "\\" + file_name
     # 是否更新数据
     if os.path.exists(path):
-        load_generic_csv_data(path)
+        return load_generic_csv_data(path)
     raise FileNotFoundError(f" {path}")
 
 
