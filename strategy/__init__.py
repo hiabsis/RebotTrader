@@ -16,7 +16,7 @@ from backtrader_plotting.schemes import Tradimo
 from setting import save_analyze_path
 from utils import load_csv_data, send_text_to_dingtalk, to_json, save_to_text, add_mouth, generate_random_str, \
     timestamp2str
-from util import file_util, data_util
+from util import file_util, data_util, date_util
 
 
 def create_cerebro(cash=10000.0, commission=0.01, stake=100):
@@ -87,34 +87,41 @@ def get_data(path):
 
 
 class Optimizer:
+    max_value = 0
 
-    def __init__(self, data, space, create_strategy_func, max_evals=500, is_send_ding_task=False):
+    def __init__(self, data, space, create_strategy_func, max_evals=500, is_send_ding_task=False, name=''):
         self.data = data
         self.max_evals = max_evals
         self.is_send_ding_task = is_send_ding_task
         self.params = None
         self.cash = 10000
         self.space = space
+        self.name = ""
         self.create_strategy_func = create_strategy_func
 
     def target_func(self, params):
+        print(params)
         cerebro = run_strategy(create_strategy_func=self.create_strategy_func, data=self.data,
                                cash=self.cash, params=params)
+        # if self.max_value < cerebro.broker.getvalue():
+        #     self.max_value = cerebro.broker.getvalue()
         return -cerebro.broker.getvalue()
 
     def run(self):
         trials = Trials()
         self.params = fmin(fn=self.target_func, space=self.space, algo=tpe.suggest, max_evals=self.max_evals,
                            trials=trials)
-        logging.info(self.params)
+
         if self.is_send_ding_task:
             info = {
-                '参数优化器': "",
+                '参数优化器': self.name,
                 '优化策略': str(self.create_strategy_func),
+                "收益率": f"{self.max_value / self.cash * 100} %",
                 '参数': self.params,
 
             }
             send_text_to_dingtalk(to_json(info))
+        logging.info(to_json(info))
         return self.params
 
     def plot(self):

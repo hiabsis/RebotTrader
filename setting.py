@@ -1,4 +1,4 @@
-project_root = "D:\\work\\git\\TaderTools"
+project_root = "D:\\work\\git\\RebotTrader"
 # 日志配置
 import logging
 
