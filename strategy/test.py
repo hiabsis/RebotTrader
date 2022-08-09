@@ -1,74 +1,94 @@
-from strategy import *
+from __future__ import (absolute_import, division, print_function, unicode_literals)
+import datetime  # 用于datetime对象操作
+import os.path  # 用于管理路径
+import sys  # 用于在argvTo[0]中找到脚本名称
+import backtrader as bt  # 引入backtrader框架
+from util import data_util
 
 
-def main(data, strategy, pf=True):
-    cerebro = bt.Cerebro()
-    cerebro.adddata(data)
-    # 加载策略
-    cerebro.addstrategy(strategy)
-    # 设置初始资本为10,000
-    startcash = 100000
-    cerebro.broker.setcash(startcash)
-    # 设置交易手续费为 0.1%
-    cerebro.broker.setcommission(commission=0.001)
-    cerebro.run()
-    # 获取回测结束后的总资金
-    portvalue = cerebro.broker.getvalue()
-    pnl = portvalue - startcash
-    if pf:
-        print(f'总资金: {round(portvalue, 2)}')
-        print(f'净收益: {round(pnl, 2)}')
-    cerebro.plot()
-
-
-# class EmaChainIndicator(bt.Indicator):
-#     lines = ('mid', 'top', 'bot',)
-#     params = (('ema_period', 20),
-#               ('rend_period', 20),
-#               ('h_period', 10),
-#               ('l_period', 10),)
-#     # 与价格在同一张图
-#     plotinfo = dict(subplot=False)
-#     def __init__(self):
-#         ema = bt.ind.EMA(self.data, period=self.p.ema_period)
-#         self.mid = bt.ind.EMA(ema, period=self.p.ema_period)
-#         self.top = bt.ind.EMA(ema, period=self.p.ema_period)
-#         self.bot = bt.ind.EMA(ema, period=self.p.ema_period)
-#         super(EmaChainIndicator, self).__init__()
-
-
-class EmaBand(bt.Indicator):
-    lines = ('mid', 'top', 'bot',)
-    params = (('ema_period', 20),
-              ('rend_period', 3),
-              ('top_ratio', 1.1),
-              ('low_ratio', 0.9),)
-    # 与价格在同一张图
-    plotinfo = dict(subplot=False)
+# 自定义指标
+class NegativeIndicator(bt.Indicator):
+    lines = ('buy_sig',)
+    params = (('ma_period', 10), ('up_period', 3))
 
     def __init__(self):
-        ema = bt.ind.EMA(self.data, period=self.p.ema_period)
-        h_ema = bt.ind.EMA(self.data.high, period=self.p.ema_period)
-        l_ema = bt.ind.EMA(self.data.low, period=self.p.ema_period)
-        # ha = bt.indicators.Average(self.data.high, period=self.p.h_period)
-        # la = bt.indicators.Average(self.data.low, period=self.p.l_period)
-        # 计算上中下轨线
-        self.l.mid = bt.ind.EMA(ema, period=self.p.ema_period)
-        # ha = bt.indicators.Average(l_ema, period=self.p.rend_period)
-        # la = bt.indicators.Average(self.data.low, period=self.p.rend_period)
-        self.l.top = bt.ind.EMA(self.mid * self.p.top_ratio,
-                                period=self.p.ema_period)
-        self.l.bot = bt.ind.EMA(self.mid * self.p.low_ratio,
-                                period=self.p.ema_period)
-        super(EmaBand, self).__init__()
+        self.addminperiod(self.p.ma_period)
+        ma = bt.ind.SMA(period=self.p.ma_period, plot=True)
+        # 买入条件
+        # 收阴线
+        self.l.buy_sig = bt.And(self.data.close < self.data.open,
+                                # 收在均线上方
+                                self.data.close > ma,
+                                # 均线向上
+                                ma == bt.ind.Highest(ma, period=self.p.up_period)
+                                )
 
 
-def create():
-    c = create_cerebro()
-    c.addstrategy(EmaBand)
-    return c
+# 创建策略
+class St(bt.Strategy):
+    params = dict(
+        stoptype=bt.Order.StopTrail,
+        trailamount=0.0,
+        trailpercent=0.05,
+    )
+
+    def __init__(self):
+        # 买入条件
+        self.buy_sig = NegativeIndicator().buy_sig
+        # # 为了在最后图表中显示均线
+        # bt.ind.SMA(period=NegativeIndicator().p.ma_period)
+        # self.order = None
+
+    # def notify_order(self, order):
+    #     if order.status in [order.Completed, order.Expired]:
+    #         self.order = None
+    #
+    # def next(self):
+    #     # 无场内资产
+    #     if not self.position:
+    #         # 未提交买单
+    #         if None == self.order:
+    #             # 到达了买入条件
+    #             if self.buy_sig:
+    #                 self.order = self.buy()
+    #     elif self.order is None:
+    #         # 提交stoptrail订单
+    #         self.order = self.sell(exectype=self.p.stoptype,
+    #                                trailamount=self.p.trailamount,
+    #                                trailpercent=self.p.trailpercent)
 
 
-if __name__ == '__main__':
-    data = data_util.get_local_generic_csv_data("BTCUSDT", "1h")
-    main(data, EmaBand)
+cerebro = bt.Cerebro()  # 创建cerebro
+# 先找到脚本的位置，然后根据脚本与数据的相对路径关系找到数据位置
+# 这样脚本从任意地方被调用，都可以正确地访问到数据
+data = data_util.get_local_generic_csv_data("ETH", '1h')
+# modpath = os.path.dirname(os.path.abspath(sys.argv[0]))
+# datapath = os.path.join(modpath, '../TQDat/day/stk/000001.csv')
+# # 创建价格数据
+# data = bt.feeds.GenericCSVData(
+#     dataname=datapath,
+#     fromdate=datetime.datetime(2018, 1, 1),
+#     todate=datetime.datetime(2020, 3, 31),
+#     nullvalue=0.0,
+#     dtformat=('%Y-%m-%d'),
+#     datetime=0,
+#     open=1,
+#     high=2,
+#     low=3,
+#     close=4,
+#     volume=5,
+#     openinterest=-1
+# )
+# 在Cerebro中添加价格数据
+cerebro.adddata(data)
+# 设置启动资金
+cerebro.broker.setcash(100000.0)
+# 设置交易单位大小
+cerebro.addsizer(bt.sizers.FixedSize, stake=1000)
+# 设置佣金为千分之一
+cerebro.broker.setcommission(commission=0.001)
+cerebro.addstrategy(St)  # 添加策略
+cerebro.run()  # 遍历所有数据
+# 打印最后结果
+print('Final Portfolio Value: %.2f' % cerebro.broker.getvalue())
+cerebro.plot(style='candlestick')  # 绘图
