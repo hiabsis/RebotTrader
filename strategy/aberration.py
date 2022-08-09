@@ -95,6 +95,6 @@ if __name__ == '__main__':
         "period": 10
     }
     # # 对策略进行可视化分析
-    show_strategy(data, create_aberration_strategy, params=params, is_show=True)
+    analyze_strategy(data, create_aberration_strategy, params=params, is_show=True)
     # # 其他数据集的表现
     # batch_optimizer(create_aberration_strategy, space=space, is_send_ding_talk=True)

@@ -16,3 +16,7 @@ def str2timestamp(date: str, fmt="%Y-%m-%d %H:%M:%S"):
 
 def str2datetime(date_str: str, fmt="%Y-%m-%d %H:%M:%S"):
     return datetime.datetime.strptime(date_str, "%Y-%m-%d %H:%M:%S")
+
+
+def add_ady(date, day):
+    return date + datetime.timedelta(days=1)

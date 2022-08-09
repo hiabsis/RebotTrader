@@ -10,8 +10,9 @@ import constant
 from binance.spot import Spot
 
 
-def       get_local_generic_csv_data(symbol: str, interval: str):
+def get_local_generic_csv_data(symbol: str, interval: str, coin="USDT"):
     # 文件名称
+    symbol = symbol + coin
     file_name = symbol + "_" + interval + ".csv"
     # 文件位置
     path = setting.date_root_path + "\\" + file_name

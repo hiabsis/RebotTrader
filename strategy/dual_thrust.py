@@ -65,22 +65,22 @@ class DualThrustStrategy(bt.Strategy):
 
             if self.data.high[0] > self.top[-self.p.period]:
                 self.order = self.buy(size=size)  # 买入
-            # if self.data.open[0] > self.bot[-1]:
-            #     self.order = self.sell(size=size)
+            if self.data.open[0] > self.bot[-1]:
+                self.order = self.sell(size=size)
 
         elif self.position.size > 0:
             # 在多头情况下，平仓条件
             if self.data.open[0] < self.bot[-self.p.period]:
                 # 最新价低于中线，多头清仓离场
                 self.close()
-                # self.order = self.sell(size=size)
+                self.order = self.sell(size=size)
 
-        # elif self.position.size < 0:
-        #     # 在空头情况下，平仓条件
-        #     if self.data.open[0] > self.top[-1]:
-        #         # 最新价高于中线，空头清仓离场
-        #         self.close()
-        #         self.order = self.buy(size=size)
+        elif self.position.size < 0:
+            # 在空头情况下，平仓条件
+            if self.data.open[0] > self.top[-1]:
+                # 最新价高于中线，空头清仓离场
+                self.close()
+                self.order = self.buy(size=size)
         pass
 
     def notify(self, order):
@@ -109,19 +109,23 @@ def create_dual_thrust_strategy(params=None):
 
 
 if __name__ == '__main__':
-    data = data_util.get_local_generic_csv_data("OPUSDT", '1h')
-    data = data_util.get_generic_csv_data('OPUSDT', '1h')
-    run_strategy(create_strategy_func=create_dual_thrust_strategy, data=data, is_show=True)
-
-    # 优化策略
+    data = data_util.get_local_generic_csv_data('ENSUSDT', '1h')
+    run_strategy(create_dual_thrust_strategy, data, {
+        "h_period": 10.227848382187478,
+        "k1": 0.432033810690125,
+        "k2": 1.5620706927069408,
+        "l_period": 34.85264244259156,
+        "period": 6.409045290050317
+    },is_show=True)
     # space = dict(
-    #     period=hp.uniform('period', 1, 30),
-    #     h_period=hp.uniform('h_period', 1, 20),
-    #     l_period=hp.uniform('l_period', 1, 20),
-    #     k1=hp.uniform('k1', -5, 5),
-    #     k2=hp.uniform('k2', -5, 5),
+    #     period=hp.uniform('period', 1, 10),
+    #     h_period=hp.uniform('h_period', 1, 36),
+    #     l_period=hp.uniform('l_period', 1, 36),
+    #     k1=hp.uniform('k1', 0, 2),
+    #     k2=hp.uniform('k2', 0, 2),
     # )
-    # # # 对策略进行可视化分析
-    # op = Optimizer(data=data, space=space, create_strategy_func=create_dual_thrust_strategy)
-    # op.run()
-    # op.plot()
+    # opt = Optimizer(create_strategy_func=create_dual_thrust_strategy, space=space, max_evals=500, data=data,
+    #                 is_send_ding_task=True)
+    # p = opt.run()
+    # opt.plot()
+    # analyze_strategy(data, create_dual_thrust_strategy, p, is_show=True)

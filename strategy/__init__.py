@@ -100,11 +100,22 @@ class Optimizer:
         self.create_strategy_func = create_strategy_func
 
     def target_func(self, params):
-        print(params)
+
         cerebro = run_strategy(create_strategy_func=self.create_strategy_func, data=self.data,
                                cash=self.cash, params=params)
-        # if self.max_value < cerebro.broker.getvalue():
-        #     self.max_value = cerebro.broker.getvalue()
+        if self.max_value < cerebro.broker.getvalue():
+            self.max_value = cerebro.broker.getvalue()
+            self.params = params
+            info = {
+                '参数优化器': self.name,
+                "数据源": self.data._dataname,
+                '优化策略': str(self.create_strategy_func),
+                "收益率": f"{self.max_value / self.cash * 100} %",
+                '参数': self.params,
+
+            }
+            logging.info(to_json(info))
+
         return -cerebro.broker.getvalue()
 
     def run(self):
@@ -115,13 +126,14 @@ class Optimizer:
         if self.is_send_ding_task:
             info = {
                 '参数优化器': self.name,
+                "数据源": self.data._dataname,
                 '优化策略': str(self.create_strategy_func),
                 "收益率": f"{self.max_value / self.cash * 100} %",
                 '参数': self.params,
 
             }
             send_text_to_dingtalk(to_json(info))
-        logging.info(to_json(info))
+
         return self.params
 
     def plot(self):
@@ -376,5 +388,8 @@ async def async_test_strategy(data, func, params=None, is_show=True):
     print(f"finished at {time.strftime('%X')}")
 
 
-def show_strategy(data, func, params=None, is_show=False):
+def analyze_strategy(data, func, params=None, is_show=False):
     asyncio.run(async_test_strategy(data, func, params, is_show))
+
+
+
