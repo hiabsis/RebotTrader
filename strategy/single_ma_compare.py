@@ -46,7 +46,10 @@ class KAMASingleStrategy(SingleStrategy):
 
 class NegativeIndicator(backtrader.Indicator):
     lines = ('buy_sig',)
-    params = (('ma_period', 10), ('up_period', 3))
+
+
+
+    params = (('ma_period ', 10), ('up_period', 3))
 
     def __init__(self):
         self.addminperiod(self.p.ma_period)
