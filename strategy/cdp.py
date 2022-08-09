@@ -69,7 +69,6 @@ class CDPStrategy(backtrader.Strategy):
 
     def __init__(self, params=None):
         self.init_params(params)
-        print(params)
         # 前一日最高价
         ph = backtrader.indicators.Highest(self.data.high, period=self.p.period)
         # 前一日最低价
@@ -126,16 +125,16 @@ if __name__ == '__main__':
     data = data_util.get_local_generic_csv_data('BNB', '1h')
 
     space = dict(
-        buy_line=hp.choice('buy_line', ['al', 'ah', 'nl', 'nh']),
-        close_line=hp.choice('close_line', ['al', 'ah', 'nl', 'nh']),
+        # buy_line=hp.choice('buy_line', ['al', 'ah', 'nl', 'nh']),
+        # close_line=hp.choice('close_line', ['al', 'ah', 'nl', 'nh']),
         period=hp.randint('period', 24 * 4),
         bwt=hp.randint('bwt', 10)
     )
-    # opt = strategy.Optimizer(data, space, create_cdp_strategy, max_evals=1000, is_send_ding_task=True)
-    # opt.run()
-    strategy.batch_optimizer(create_cdp_strategy, space,
-                             max_evals=1000,
-                             strategy_name="CDP策略",
-                             is_send_ding_talk=True)
+    opt = strategy.Optimizer(data, space, create_cdp_strategy, max_evals=1000, is_send_ding_task=True)
+    opt.run()
+    # strategy.batch_optimizer(create_cdp_strategy, space,
+    #                          max_evals=1000,
+    #                          strategy_name="CDP策略",
+    #                          is_send_ding_talk=True)
     # strategy.run_strategy(create_strategy_func=create_cdp_strategy, data=data, is_show=True)
     # strategy.simple_analyze(func=create_cdp_strategy, data=data)

@@ -104,11 +104,25 @@ class Optimizer:
         self.space = space
         self.strategy_name = ''
         self.create_strategy_func = create_strategy_func
+        self.value = 0
 
     def target_func(self, params):
         try:
+
             cerebro = run_strategy(create_strategy_func=self.create_strategy_func, data=self.data,
                                    cash=self.cash, params=params)
+
+            if self.value < cerebro.broker.getvalue():
+                self.value = cerebro.broker.getvalue()
+                self.params = params
+                info = {
+                    '优化策略': self.strategy_name,
+                    '数据源': self.data._dataname,
+                    '收益率': f"{(self.value - self.cash) / self.cash * 100} %",
+                    '参数': str(self.params),
+
+                }
+                print(info)
             return -cerebro.broker.getvalue()
         except Exception as r:
             print('未知错误 %s' % r)
