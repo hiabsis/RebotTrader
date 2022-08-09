@@ -1,3 +1,4 @@
+import strategy
 from strategy import *
 
 
@@ -85,16 +86,19 @@ if __name__ == '__main__':
     path = setting.date_root_path + "\\" + file_name
     # 获取数据
     data = get_data(path)
-    # # 优化策略
+    cerebro = create_aberration_strategy()
+    cerebro.adddata(data)
+    strategy.simple_analyze(func=create_aberration_strategy, data=data)
+    # 优化策略
     # space = dict(
     #     period=hp.uniform('period', 10, 500)
     # )
     # op = Optimizer(data=data, space=space, create_strategy_func=create_aberration_strategy)
     # params = op.run()
-    params = {
-        "period": 10
-    }
-    # # 对策略进行可视化分析
-    show_strategy(data, create_aberration_strategy, params=params, is_show=True)
+    # params = {
+    #     "period": 10
+    # }
+    # # # 对策略进行可视化分析
+    # show_strategy(data, create_aberration_strategy, params=params, is_show=True)
     # # 其他数据集的表现
     # batch_optimizer(create_aberration_strategy, space=space, is_send_ding_talk=True)

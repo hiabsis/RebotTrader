@@ -1,22 +1,31 @@
-# plot_info = dict(plot=True,  # 是否绘制
-#                  subplot=True,  # 是否绘制成子图
-#                  plotname='',  # 图形名称
-#                  plotabove=False,  # 子图是否绘制在主图的上方
-#                  plotlinelabels=False,  # 主图上曲线的名称
-#                  plotlinevalues=True,  # 是否展示曲线最后一个时间点上的取值
-#                  plotvaluetags=True,  # 是否以卡片的形式在曲线末尾展示最后一个时间点上的取值
-#                  plotymargin=0.0,  # 用于设置子图 y 轴的边界
-#                  plothlines=[a, b, ...],  # 用于绘制取值为 a,b,... 的水平线
-#                  plotyticks=[],  # 用于绘制取值为 a,b,... y轴刻度
-#                  plotyhlines=[a, b, ...],  # 优先级高于plothlines、plotyticks，是这两者的结合
-#                  plotforce=False,  # 是否强制绘图
-#                  plotmaster=None,  # 用于指定主图绘制的主数据
-#                  plotylimited=True,
-#                  # 用于设置主图的 y 轴边界，
-#                  # 如果True，边界只由主数据 data feeds决定，无法完整显示超出界限的辅助指标；
-#                  # 如果False, 边界由主数据 data feeds和指标共同决定，能确保所有数据都能完整展示
-#                  )
-import webbrowser
+from __future__ import (absolute_import, division, print_function, unicode_literals)
+import datetime  # 用于datetime对象操作
+import os.path  # 用于管理路径
+import sys  # 用于在argvTo[0]中找到脚本名称
+
+import backtrader
+import backtrader as bt  # 引入backtrader框架
+
+import strategy
+from util import data_util
+
+
+class TS(backtrader.Strategy):
+    def __int__(self):
+        self.macd = bt.ind.MACD()
+        bt.ind.MACDHisto()
+        bt.ind.RSI(period=14)
+        bt.ind.BollingerBands()
+
+
+def main():
+    data = data_util.get_local_generic_csv_data("ETH", '1h')
+    cerebro = strategy.create_cerebro()
+    cerebro.adddata(data)
+    cerebro.addstrategy(TS)
+    cerebro.run()
+    cerebro.plot()
+
 
 if __name__ == '__main__':
-    webbrowser.open("D:\\work\\git\\Tools\static\\analyze\\pyfolio_BNBUSDT_1hbgvLZgNg6dWYafDa.html")
+    main()
