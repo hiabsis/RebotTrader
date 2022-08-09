@@ -95,30 +95,35 @@ def get_data(path):
 
 class Optimizer:
 
-    def __init__(self, data, space, create_strategy_func, max_evals=500, is_send_ding_task=False):
+    def __init__(self, data, space, create_strategy_func, max_evals=500, is_send_ding_task=False, strategy_name=''):
         self.data = data
         self.max_evals = max_evals
         self.is_send_ding_task = is_send_ding_task
         self.params = None
         self.cash = 10000
         self.space = space
+        self.strategy_name = ''
         self.create_strategy_func = create_strategy_func
 
     def target_func(self, params):
-        cerebro = run_strategy(create_strategy_func=self.create_strategy_func, data=self.data,
-                               cash=self.cash, params=params)
-        return -cerebro.broker.getvalue()
+        try:
+            cerebro = run_strategy(create_strategy_func=self.create_strategy_func, data=self.data,
+                                   cash=self.cash, params=params)
+            return -cerebro.broker.getvalue()
+        except Exception as r:
+            print('未知错误 %s' % r)
+        return 0
 
     def run(self):
         trials = Trials()
         self.params = fmin(fn=self.target_func, space=self.space, algo=tpe.suggest, max_evals=self.max_evals,
                            trials=trials)
-        logging.info(self.params)
+        logging.info(f'最优参数 {self.params}')
         if self.is_send_ding_task:
             info = {
-                '参数优化器': "",
-                '优化策略': str(self.create_strategy_func),
-                '参数': self.params,
+                '优化策略': self.strategy_name,
+                '数据源': self.data._dataname,
+                '参数': str(self.params),
 
             }
             send_text_to_dingtalk(to_json(info))
@@ -128,7 +133,8 @@ class Optimizer:
         run_strategy(create_strategy_func=self.create_strategy_func, data=self.data, params=self.params, is_show=True)
 
 
-def batch_optimizer(strategy_func, space, root=None, name=None,
+def batch_optimizer(strategy_func, space, root=None, strategy_name="batch_optimizer",
+                    max_evals=500,
                     is_send_ding_talk=False):
     if root is None:
         root = setting.date_root_path
@@ -141,24 +147,24 @@ def batch_optimizer(strategy_func, space, root=None, name=None,
         data = get_data(path)
         cash = 100000
 
-        opt = Optimizer(data=data, space=space, create_strategy_func=strategy_func)
+        opt = Optimizer(data=data, space=space, max_evals=max_evals, create_strategy_func=strategy_func)
         params = opt.run()
         end = datetime.datetime.now().timestamp()
         execute_time = (end - start) / 60
         cerebro = run_strategy(create_strategy_func=strategy_func, data=data, params=params, cash=cash)
         info = {
-            "策略名称": name,
+            "策略名称": strategy_name,
             "运行时间": f"{execute_time}分钟",
             "数据源": path,
             "收益率": f"{cerebro.broker.getvalue() / cash * 100} %",
-            "参数": params
+            "参数": str(params)
         }
         print(to_json(info))
         save_params.append(params)
         message.append(info)
     if is_send_ding_talk:
         send_text_to_dingtalk(to_json(message))
-    save_path = "D:\\work\\git\\Tools\\static\\params\\" + name + ".txt"
+    save_path = "D:\\work\\git\\Tools\\static\\params\\" + strategy_name + ".txt"
     save_to_text(to_json(save_path), path=save_path)
 
 
@@ -380,7 +386,7 @@ def show_strategy(data, func, params=None, is_show=False):
     asyncio.run(async_test_strategy(data, func, params, is_show))
 
 
-def simple_analyze(func, data, params=None,name="DEFAULT_NAME"):
+def simple_analyze(func, data, params=None, name="DEFAULT_NAME"):
     cerebro = func(params)
     cerebro.adddata(data)
     # 回测时需要添加 TimeReturn 分析器
@@ -443,7 +449,7 @@ def simple_analyze(func, data, params=None,name="DEFAULT_NAME"):
     h1, l1 = ax1.get_legend_handles_labels()
     h2, l2 = ax2.get_legend_handles_labels()
     plt.legend(h1 + h2, l1 + l2, fontsize=12, loc='upper left', ncol=1)
-    save_path = setting.save_analyze_path + "\\" + "simple_analyze_"+name+".jpg"
+    save_path = setting.save_analyze_path + "\\" + "simple_analyze_" + name + ".jpg"
     plt.savefig(save_path)
 
     fig.tight_layout()  # 规整排版
