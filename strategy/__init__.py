@@ -3,27 +3,14 @@
 import datetime
 import logging
 import os
-import time
-import asyncio
 from hyperopt import fmin, tpe, Trials, hp
 import backtrader as bt
 import logging as log
 import numpy
-import quantstats
-import webbrowser
 import setting
-import backtrader
 import pandas
-import pyfolio
-import matplotlib.ticker as ticker  # 导入设置坐标轴的模块
-# 绘制图形
-import matplotlib.pyplot as plt
-from backtrader_plotting import Bokeh
-from backtrader_plotting.schemes import Tradimo
-from setting import save_analyze_path
-from utils import load_csv_data, send_text_to_dingtalk, to_json, save_to_text, add_mouth, generate_random_str, \
-    timestamp2str
-from util import file_util, data_util
+from analyze import get_strategy_name
+from utils import load_csv_data, send_text_to_dingtalk, to_json, save_to_text, add_mouth
 
 
 def create_strategy(strategy, p=None):
@@ -45,7 +32,6 @@ def create_cerebro(cash=10000.0, commission=0.01, stake=100):
     """
     # 加载backtrader引擎
     cerebro = bt.Cerebro()
-
     # 策略加进来
     cerebro.addsizer(bt.sizers.FixedSize, stake=1)
     # 设置以收盘价成交，作弊模式
@@ -69,9 +55,15 @@ def optimize_strategy(func, space, max_evals=400):
     return fmin(fn=func, space=space, algo=tpe.suggest, max_evals=max_evals, trials=trials)
 
 
-def run(data, strategy, params=None, is_show=False, is_log=False, name=''):
+def run(data, strategy, params=None, is_show=False, is_log=False, is_update_params=False, cash=10000, stake=10,
+        commission=0.01, name=''):
     """
     运行策略
+    :param stake:
+    :param cash:
+    :param commission:
+    :param cash:
+    :param is_update_params:
     :param is_log:
     :param data: 数据
     :param strategy: 策略
@@ -80,9 +72,16 @@ def run(data, strategy, params=None, is_show=False, is_log=False, name=''):
     :param name: 策略名称
     :return:
     """
+    cerebro = bt.Cerebro()
+    cerebro.addsizer(bt.sizers.FixedSize, stake=stake)
+    # 设置以收盘价成交，作弊模式
+    cerebro.broker.set_coc(True)
+    cerebro.broker.set_cash(cash)
+    cerebro.broker.setcommission(commission=commission)
     cerebro = create_strategy(strategy, params)
     cash = cerebro.broker.getcash()
     cerebro.adddata(data)
+
     cerebro.run()
     if is_log:
         result = {
@@ -96,7 +95,8 @@ def run(data, strategy, params=None, is_show=False, is_log=False, name=''):
     log.info(result)
 
 
-def run_strategy(data, create_strategy_func=None, strategy=None, params=None, cash=10000, is_show=False):
+def run_strategy(data, create_strategy_func=None, strategy=None, params=None, cash=10000, is_show=False,
+                 is_update_strategy=False):
     """
     运行策略
     :param strategy:
@@ -149,7 +149,7 @@ class Optimizer:
         try:
 
             cerebro = run_strategy(create_strategy_func=self.create_strategy_func, data=self.data,
-                                   cash=self.cash, params=params)
+                                   cash=self.cash, params=params, is_update_strategy=True)
             # 记录更加优异的策略参数
             if self.value < cerebro.broker.getvalue():
                 self.value = cerebro.broker.getvalue()
@@ -296,9 +296,3 @@ def batch_performance_optimizer(strategy_func, space, root="D:\\work\\git\\Tools
 
     save_path = "D:\\work\\git\\Tools\\static\\params" + "\\" + strategy_name + ".text"
     save_to_text(to_json(save_params), save_path)
-
-
-
-
-
-
