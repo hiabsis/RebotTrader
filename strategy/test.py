@@ -1,31 +1,40 @@
-from __future__ import (absolute_import, division, print_function, unicode_literals)
-import datetime  # 用于datetime对象操作
-import os.path  # 用于管理路径
-import sys  # 用于在argvTo[0]中找到脚本名称
+##最小二乘法
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.optimize import leastsq
 
-import backtrader
-import backtrader as bt  # 引入backtrader框架
+plt.rcParams['font.sans-serif'] = ['SimHei']
 
-import strategy
-from util import data_util
-
-
-class TS(backtrader.Strategy):
-    def __int__(self):
-        self.macd = bt.ind.MACD()
-        bt.ind.MACDHisto()
-        bt.ind.RSI(period=14)
-        bt.ind.BollingerBands()
+Xi = np.array([1, 2, 3, 2])
+Yi = np.array([1, 3, 3, 5])
 
 
-def main():
-    data = data_util.get_local_generic_csv_data("ETH", '1h')
-    cerebro = strategy.create_cerebro()
-    cerebro.adddata(data)
-    cerebro.addstrategy(TS)
-    cerebro.run()
-    cerebro.plot()
+def func(p, x):
+    k, b = p
+    return k * x + b
 
 
-if __name__ == '__main__':
-    main()
+def error(p, x, y):
+    return func(p, x) - y
+
+
+p0 = [1, 1]
+
+Para = leastsq(error, p0, args=(Xi, Yi))
+
+k, b = Para[0]
+print("k=", k, "b=", b)
+print("cost：" + str(Para[1]))
+print("求解的拟合直线为:")
+print("y=" + str(round(k, 2)) + "x+" + str(round(b, 2)))
+print("k", k)
+
+plt.figure(figsize=(8, 6))
+plt.scatter(Xi, Yi, color="green", label="样本数据", linewidth=2)
+
+x = np.array([1, 2, 3])
+y = k * x + b
+plt.plot(x, y, color="red", label="拟合直线", linewidth=2)
+plt.title('y={}+{}x'.format(b, k))
+plt.legend(loc='lower right')
+plt.show()
