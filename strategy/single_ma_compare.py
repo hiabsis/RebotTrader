@@ -6,8 +6,7 @@ import datetime
 import strategy
 import backtrader
 
-from indicator.ema import EmaBandIndicator
-from strategy.test import St
+
 from util import data_util
 
 
@@ -38,16 +37,12 @@ class SingleStrategy(backtrader.Strategy):
 class KAMASingleStrategy(SingleStrategy):
 
     def __int__(self):
-        self.buy_sig = NegativeIndicator().buy_sig
-        # self.kama = backtrader.talib.KAMA(self.data.close, timeperiod=self.p.period)
-        # self.kama2 = EmaBandIndicator()
-        self.kama2 = KAMAIndicator()
+
+        self.index = ChanelIndicator()
 
 
 class NegativeIndicator(backtrader.Indicator):
     lines = ('buy_sig',)
-
-
 
     params = (('ma_period ', 10), ('up_period', 3))
 
@@ -56,12 +51,24 @@ class NegativeIndicator(backtrader.Indicator):
         ma = backtrader.ind.SMA(period=self.p.ma_period, plot=True)
         # 买入条件
         # 收阴线
+
         self.l.buy_sig = backtrader.And(self.data.close < self.data.open,
                                         # 收在均线上方
                                         self.data.close > ma,
                                         # 均线向上
                                         ma == backtrader.ind.Highest(ma, period=self.p.up_period)
                                         )
+
+
+class ChanelIndicator(backtrader.Indicator):
+    lines = ('mid',)
+    params = (('period ', 30))
+
+    def __init__(self):
+        ema = backtrader.indicators.EMA(period=self.p.period)
+
+        self.l.mid = ema
+        super(ChanelIndicator, self).__init__()
 
 
 def create_kama_single_strategy(params):
@@ -85,10 +92,12 @@ class KAMAIndicator(backtrader.Indicator):
     params = (
         ('period', 30),
     )
+
     # # 与价格在同一张图
     # plotinfo = dict(subplot=False)
 
     def __init__(self):
+        backtrader.indicators.SmoothedMovingAverage
         self.l.value = backtrader.talib.KAMA(self.data.close, timeperiod=self.p.period)
         super(KAMAIndicator, self).__init__()
 
@@ -109,4 +118,4 @@ if __name__ == '__main__':
     cerebro.run()  # 遍历所有数据
     # 打印最后结果
     print('Final Portfolio Value: %.2f' % cerebro.broker.getvalue())
-    cerebro.plot(style='candlestick')
+    cerebro.plot()
