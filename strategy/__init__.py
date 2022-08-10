@@ -72,16 +72,9 @@ def run(data, strategy, params=None, is_show=False, is_log=False, is_update_para
     :param name: 策略名称
     :return:
     """
-    cerebro = bt.Cerebro()
-    cerebro.addsizer(bt.sizers.FixedSize, stake=stake)
-    # 设置以收盘价成交，作弊模式
-    cerebro.broker.set_coc(True)
-    cerebro.broker.set_cash(cash)
-    cerebro.broker.setcommission(commission=commission)
     cerebro = create_strategy(strategy, params)
     cash = cerebro.broker.getcash()
     cerebro.adddata(data)
-
     cerebro.run()
     if is_log:
         result = {
@@ -204,17 +197,20 @@ def batch_optimizer(strategy_func, space, root=None, strategy_name="batch_optimi
         params = opt.run()
         end = datetime.datetime.now().timestamp()
         execute_time = (end - start) / 60
-        cerebro = run_strategy(create_strategy_func=strategy_func, data=data, params=params, cash=cash)
-        info = {
-            "策略名称": strategy_name,
-            "运行时间": f"{execute_time}分钟",
-            "数据源": path,
-            "收益率": f"{cerebro.broker.getvalue() / cash * 100} %",
-            "参数": str(params)
-        }
-        print(to_json(info))
-        save_params.append(params)
-        message.append(info)
+        try:
+            cerebro = run_strategy(create_strategy_func=strategy_func, data=data, params=params, cash=cash)
+            info = {
+                "策略名称": strategy_name,
+                "运行时间": f"{execute_time}分钟",
+                "数据源": path,
+                "收益率": f"{cerebro.broker.getvalue() / cash * 100} %",
+                "参数": str(params)
+            }
+            print(to_json(info))
+            save_params.append(params)
+            message.append(info)
+        except Exception as r:
+            print('未知错误 %s' % r)
     if is_send_ding_talk:
         send_text_to_dingtalk(to_json(message))
     save_path = "D:\\work\\git\\Tools\\static\\params\\" + strategy_name + ".txt"
