@@ -9,8 +9,18 @@ import logging as log
 import numpy
 import setting
 import pandas
-from analyze import get_strategy_name
-from utils import load_csv_data, send_text_to_dingtalk, to_json, save_to_text, add_mouth
+
+from util.string_util import generate_random_str
+from utils import load_csv_data, send_text_to_dingtalk, to_json, save_to_text, add_mouth, timestamp2str
+
+
+def get_strategy_name(func, file=""):
+    strategy_name = str(func).split(" ")[1]
+    data_info = file.split('\\')[-1].split('.')[0]
+    strategy_name = strategy_name + "_" + data_info + "_" \
+                    + timestamp2str(int(datetime.datetime.now().timestamp()), format="%Y_%m_%d_%H_%M") + "_" \
+                    + generate_random_str(12)
+    return strategy_name
 
 
 def create_strategy(strategy, p=None):
@@ -154,7 +164,8 @@ class Optimizer:
                     '参数': str(self.params),
 
                 }
-                print(info)
+                log.info("更新策略最优参数")
+                log.info(to_json(info))
             return -cerebro.broker.getvalue()
         except Exception as r:
             print('未知错误 %s' % r)

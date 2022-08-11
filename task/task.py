@@ -2,14 +2,11 @@ import datetime
 import logging as log
 from apscheduler.schedulers.blocking import BlockingScheduler
 from apscheduler.triggers.cron import CronTrigger
-
 from constant import interval_corn, k_lines_csv_head
 from date import BiAnService, get_k_lines
-from index import execute_strategy
 from setting import monitor_tasks
-from strategy import SimpleMonitorStrategy
-
-from util import generate_random_str, date2csv
+from util.file_util import date2csv
+from util.string_util import generate_random_str
 
 
 def tick(**params):
@@ -116,7 +113,7 @@ def monitor_task(**params):
     file_name = "monito_" + params['symbol'] + "_" + params["interval"]
     path = date2csv(data, file_name, k_lines_csv_head)
     # path = "D:\\work\\git\\test\\static\\data\\test.csv"
-    execute_strategy(path, params['strategy'], params)
+    # execute_strategy(path, params['strategy'], params)
     log.info("[结束] [监控任务]  [{}-{}]".format(params['symbol'], params['interval']))
 
 
@@ -127,10 +124,7 @@ def get_strategy_by_name(clazzName: str):
     :return:
     """
     if clazzName == "SimpleMonitorStrategy":
-        return SimpleMonitorStrategy
+        # return SimpleMonitorStrategy
+        return None
     else:
         return None
-
-
-
-

@@ -125,16 +125,17 @@ if __name__ == '__main__':
     data = data_util.get_local_generic_csv_data('BNB', '1h')
 
     space = dict(
-        # buy_line=hp.choice('buy_line', ['al', 'ah', 'nl', 'nh']),
-        # close_line=hp.choice('close_line', ['al', 'ah', 'nl', 'nh']),
-        period=hp.randint('period', 24 * 4),
-        bwt=hp.randint('bwt', 10)
+        buy_line=hp.choice('buy_line', ['al', 'ah', 'nl', 'nh']),
+        close_line=hp.choice('close_line', ['al', 'ah', 'nl', 'nh']),
+        period=hp.randint('period', 24 * 3),
+        bwt=hp.randint('bwt', 6)
     )
-    opt = strategy.Optimizer(data, space, create_cdp_strategy, max_evals=1000, is_send_ding_task=True)
+    opt = strategy.Optimizer(data, space, create_cdp_strategy, max_evals=500, is_send_ding_task=True)
     opt.run()
-    # strategy.batch_optimizer(create_cdp_strategy, space,
-    #                          max_evals=1000,
-    #                          strategy_name="CDP策略",
-    #                          is_send_ding_talk=True)
-    # strategy.run_strategy(create_strategy_func=create_cdp_strategy, data=data, is_show=True)
-    # strategy.simple_analyze(func=create_cdp_strategy, data=data)
+    strategy.batch_optimizer(create_cdp_strategy, space,
+                             max_evals=1000,
+                             strategy_name="CDP策略",
+                             is_send_ding_talk=True)
+    params = {'bwt': 4, 'period': 30}
+    strategy.run_strategy(create_strategy_func=create_cdp_strategy, params=params, data=data, is_show=True)
+    strategy.simple_analyze(func=create_cdp_strategy, data=data)
