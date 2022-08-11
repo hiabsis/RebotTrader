@@ -1,11 +1,11 @@
 from hyperopt import hp
 
 import strategy
-from strategy.art import create_dynamic_atr_strategy_v2
+from strategy.art import *
 from util import data_util
 
 
-def test_dynamic_atr_strategy_v2_opt():
+def test_opt_dynamic_atr_strategy_v2():
     """
     测试优化后的策略
     :return:
@@ -26,7 +26,7 @@ def test_dynamic_atr_strategy_v2_opt():
     opt.plot()
 
 
-def test_batch_dynamic_atr_strategy_v2_opt():
+def test_batch_opt_dynamic_atr_strategy_v2():
     space = dict(
         art_period=hp.uniform('art_period', 10, 24 * 7),
         art_down_period=hp.uniform('art_down_period', 1, 24 * 7),
@@ -37,8 +37,42 @@ def test_batch_dynamic_atr_strategy_v2_opt():
     )
 
     strategy.batch_optimizer(create_dynamic_atr_strategy_v2, space, strategy_name='dynamic_atr_strategy_v2',
-                             is_send_ding_talk=True, max_evals=1)
+                             is_send_ding_talk=True, max_evals=500)
 
 
+def test_dynamic_atr_strategy_v2():
+    params = {
+        "art_lowest_period": 95.28260781970545,
+        "art_period": 64.02704141236504,
+        "position": 0.9995364843544763,
+        "stop_loss": 0.5121362175837294,
+        "take_profit": 0.3560544958062028
+    }
+    strategy.run_strategy(data, create_dynamic_atr_strategy_v2, params=params, is_show=True)
+
+
+def test_create_continue_down_atr_strategy():
+    params = {
+        "art_lowest_period": 95.28260781970545,
+        "art_period": 64.02704141236504,
+        "position": 0.9995364843544763,
+        "stop_loss": 0.5121362175837294,
+        "take_profit": 0.3560544958062028
+    }
+    strategy.run_strategy(data, create_continue_down_atr_strategy, params=params, is_show=True)
+
+
+def test_create_dynamic_art():
+    params = {
+        "art_lowest_period": 95.28260781970545,
+        "art_period": 64.02704141236504,
+        "position": 0.9995364843544763,
+        "stop_loss": 0.5121362175837294,
+        "take_profit": 0.3560544958062028
+    }
+    strategy.run_strategy(data, params=params, create_strategy_func=create_dynamic_art, is_show=True)
+
+
+data = data_util.get_local_generic_csv_data('ETH', '1h')
 if __name__ == '__main__':
-    test_batch_dynamic_atr_strategy_v2_opt()
+    test_create_dynamic_art()

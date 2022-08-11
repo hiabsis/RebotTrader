@@ -1,4 +1,6 @@
 import datetime
+import json
+import pprint
 from datetime import time
 
 
@@ -20,3 +22,14 @@ def str2datetime(date_str: str, fmt="%Y-%m-%d %H:%M:%S"):
 
 def add_ady(date, day):
     return date + datetime.timedelta(days=1)
+
+
+def read_json(path):
+    return json.load(open(path, 'r', encoding="utf-8"))['data']
+
+
+if __name__ == '__main__':
+    path = r"D:\work\git\RebotTrader\static\json.json"
+    data = read_json(path)
+
+    pprint.pprint(read_json(path)[0]['base'])

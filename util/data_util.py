@@ -147,3 +147,7 @@ def load_generic_csv_data(data_path, start=None, end=None):
         volume=5,
         openinterest=-1
     )
+
+
+def read_json(self):
+    return json.load(open('app_json.json','r',encoding="utf-8"))['data']

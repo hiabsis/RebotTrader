@@ -88,8 +88,8 @@ def run(data, strategy, params=None, is_show=False, is_log=False, is_update_para
     log.info(result)
 
 
-def run_strategy(data, create_strategy_func=None, strategy=None, params=None, cash=10000, is_show=False,
-                 is_update_strategy=False):
+def run_strategy(data, create_strategy_func=None, params=None, cash=10000, is_show=False,
+                ):
     """
     运行策略
     :param strategy:
