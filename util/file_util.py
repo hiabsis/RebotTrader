@@ -1,4 +1,5 @@
 import csv
+import json
 
 import setting
 import imgkit
@@ -73,20 +74,35 @@ def html2img(html: str, output=None):
     return output
 
 
-def date2csv(data, file_name, head, write_type=None):
+def date2csv(data, file_path, head, write_type=None):
     """
     数据保存为csv
     :param write_type: 写入数据类型 a 添加 w 覆盖写
     :param data: 数据
-    :param file_name: 文件名称
+    :param file_path: 文件路径
     :param head: 表头
     :return: 文件保存路径
     """
     if write_type is None:
         write_type = 'w'
-    file_path = setting.date_root_path + "\\" + file_name + ".csv"
+    if not os.path.exists(file_path):
+        with open(file_path, write_type) as csvfile:
+            writer = csv.writer(csvfile, lineterminator='\n')
+            writer.writerow(head)
     with open(file_path, write_type) as csvfile:
         writer = csv.writer(csvfile, lineterminator='\n')
-        writer.writerow(head)
+
         writer.writerows(data)
     return file_path
+
+
+def read_json(path, name=None):
+    """
+    读取json 数据
+    :param path:
+    :param name:
+    :return:
+    """
+    if name:
+        return json.load(open(path, 'r', encoding="utf-8"))[name]
+    return json.load(open(path, 'r', encoding="utf-8"))

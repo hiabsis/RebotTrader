@@ -1,7 +1,18 @@
+# -*- coding: UTF-8 -*-
 import datetime
 import json
 import pprint
-from datetime import time
+import time
+
+
+def add_time(date, minutes=0, hour=0, days=0):
+    date = date + datetime.timedelta(minutes=minutes, hours=hour, days=days)
+    return date
+
+
+def timestamp2str(timestamp, fmt="%Y-%m-%d %H:%M:%S"):
+    time_array = time.localtime(timestamp)
+    return time.strftime(fmt, time_array)
 
 
 def str2timestamp(date: str, fmt="%Y-%m-%d %H:%M:%S"):
@@ -17,19 +28,8 @@ def str2timestamp(date: str, fmt="%Y-%m-%d %H:%M:%S"):
 
 
 def str2datetime(date_str: str, fmt="%Y-%m-%d %H:%M:%S"):
-    return datetime.datetime.strptime(date_str, "%Y-%m-%d %H:%M:%S")
-
-
-def add_ady(date, day):
-    return date + datetime.timedelta(days=1)
-
-
-def read_json(path):
-    return json.load(open(path, 'r', encoding="utf-8"))['data']
+    return datetime.datetime.strptime(date_str, fmt)
 
 
 if __name__ == '__main__':
-    path = r"D:\work\git\RebotTrader\static\json.json"
-    data = read_json(path)
-
-    pprint.pprint(read_json(path)[0]['base'])
+    print(datetime.datetime.now() + datetime.timedelta(minutes=-1, hours=0))
