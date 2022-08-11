@@ -45,6 +45,8 @@ class AtrStrategy(backtrader.Strategy):
         self.order_list = list()
 
     def handle_params(self, params):
+        if params is None:
+            return
         if 'art_period' in params:
             self.p.art_period = int(params['art_period'])
         if 'art_low' in params:

@@ -9,7 +9,7 @@ import logging as log
 import numpy
 import setting
 import pandas
-from analyze import get_strategy_name
+
 from utils import load_csv_data, send_text_to_dingtalk, to_json, save_to_text, add_mouth
 
 
@@ -89,7 +89,7 @@ def run(data, strategy, params=None, is_show=False, is_log=False, is_update_para
 
 
 def run_strategy(data, create_strategy_func=None, params=None, cash=10000, is_show=False,
-                ):
+                 ):
     """
     运行策略
     :param strategy:
@@ -109,7 +109,7 @@ def run_strategy(data, create_strategy_func=None, params=None, cash=10000, is_sh
     cerebro.run()
     if is_show:
         info = {
-            "策略名称": get_strategy_name(func=create_strategy_func, file=data._dataname),
+            "策略名称": "",
             "数据源": data._dataname,
             "收益率": f"{(cerebro.broker.getvalue() - cash) / cash * 100} %",
             "参数": params
