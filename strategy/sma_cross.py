@@ -17,7 +17,6 @@ class SmaCrossStrategy(bt.Strategy):
         sma1 = bt.ind.SMA(period=int(self.params.sma1))  # 用int取整
         sma2 = bt.ind.SMA(period=int(self.params.sma2))  # 用int取整
         self.crossover = bt.ind.CrossOver(sma1, sma2)
-
         self.order = None
 
     def get_buy_unit(self):
