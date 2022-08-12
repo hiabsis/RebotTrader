@@ -8,10 +8,11 @@ from setting import wk_img_path
 from PIL import Image
 from time import strftime, localtime
 from util import string_util
+import logging
 
 
 def print_time():
-    print(strftime("%Y-%m-%d %H:%M:%S", localtime()))
+    logging.info(strftime("%Y-%m-%d %H:%M:%S", localtime()))
     return
 
 
@@ -68,13 +69,13 @@ def html2img(html: str, output=None):
 
     if output is None:
         output = setting.image_root_path + string_util.generate_random_str(6) + ".png"
-    print(output)
+    logging(output)
     imgkit.from_file(html, output, config=cfg)
 
     return output
 
 
-def date2csv(data, file_path, head, write_type=None):
+def date2csv(data, file_path: str, head, write_type=None):
     """
     数据保存为csv
     :param write_type: 写入数据类型 a 添加 w 覆盖写
@@ -86,9 +87,16 @@ def date2csv(data, file_path, head, write_type=None):
     if write_type is None:
         write_type = 'w'
     if not os.path.exists(file_path):
-        with open(file_path, write_type) as csvfile:
-            writer = csv.writer(csvfile, lineterminator='\n')
-            writer.writerow(head)
+        # 创建目录
+        path = file_path.split("\\")
+        file_dir = ""
+        for item in range(0, len(path) - 1):
+            file_dir = file_dir + path[item] + "\\"
+        if not os.path.exists(file_dir):
+            os.makedirs(file_dir)
+    with open(file_path, write_type) as csvfile:
+        writer = csv.writer(csvfile, lineterminator='\n')
+        writer.writerow(head)
     with open(file_path, write_type) as csvfile:
         writer = csv.writer(csvfile, lineterminator='\n')
 
