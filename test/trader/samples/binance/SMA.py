@@ -3,19 +3,8 @@ import backtrader as bt
 from datetime import datetime, timedelta
 import json
 import setting
-from strategy import sma_cross
 
-cerebro = bt.Cerebro(quicknotify=True)
-
-config = {
-    'apiKey': setting.BINANCE_API_KEY,
-    'secret': setting.BINANCE_SECRET_KEY,
-    'timeout': 15000,
-    'enableRateLimit': True,
-    'verbose': True,
-    'proxies': setting.VPN_PROXIES
-}
-store = CCXTStore(exchange='binance', currency='USDT', config=config, retries=5, debug=False, sandbox=True)
+import logging
 
 
 class TestStrategy(bt.Strategy):
@@ -35,11 +24,15 @@ class TestStrategy(bt.Strategy):
         # never funded, a KeyError will be raised! Change LTC below as approriate
         if self.live_data:
             cash, value = self.broker.get_wallet_balance('BNB')
+            logging.info(f"账户{cash},{value}")
+            cash, value = self.broker.get_wallet_balance('BTC')
+            logging.info(f"账户{cash},{value}")
+            cash, value = self.broker.get_wallet_balance('USDT')
+            logging.info(f"账户{cash},{value}")
         else:
             # Avoid checking the balance during a backfill. Otherwise, it will
             # Slow things down.
             cash = 'NA'
-            return  # 仍然处于历史数据回填阶段，不执行逻辑，返回
 
         for data in self.datas:
             print('{} - {} | Cash {} | O: {} H: {} L: {} C: {} V:{} SMA:{}'.format(data.datetime.datetime(),
@@ -59,11 +52,38 @@ class TestStrategy(bt.Strategy):
             self.live_data = False
 
 
+# with open('./samples/params.json', 'r') as f:
+#     params = json.load(f)
+
+cerebro = bt.Cerebro(quicknotify=True)
+
+# Add the strategy
+cerebro.addstrategy(TestStrategy)
+
+# Create our store
+config = {'apiKey': setting.BINANCE_API_KEY,
+          'secret': setting.BINANCE_SECRET_KEY,
+          'enableRateLimit': True,
+          'timeout': 15000,
+          'verbose': True,
+          'proxies': setting.VPN_PROXIES
+          }
+
+# IMPORTANT NOTE - Kraken (and some other exchanges) will not return any values
+# for get cash or value if You have never held any BNB coins in your account.
+# So switch BNB to a coin you have funded previously if you get errors
+store = CCXTStore(exchange='binance', currency='BNB', config=config, retries=5, debug=False, sandbox=True)
+
+# Get the broker and pass any kwargs if needed.
+# ----------------------------------------------
+# Broker mappings have been added since some exchanges expect different values
+# to the defaults. Case in point, Kraken vs Bitmex. NOTE: Broker mappings are not
+# required if the broker uses the same values as the defaults in CCXTBroker.
 broker_mapping = {
     'order_types': {
         bt.Order.Market: 'market',
         bt.Order.Limit: 'limit',
-        bt.Order.Stop: 'stop-loss',
+        bt.Order.Stop: 'stop-loss',  # stop-loss for kraken, stop for bitmex
         bt.Order.StopLimit: 'stop limit'
     },
     'mappings': {
@@ -76,20 +96,21 @@ broker_mapping = {
             'value': 1}
     }
 }
+
 broker = store.getbroker(broker_mapping=broker_mapping)
+
+
 cerebro.setbroker(broker)
 
+# Get our data
+# Drop newest will prevent us from loading partial data from incomplete candles
 hist_start_date = datetime.utcnow() - timedelta(minutes=50)
+data = store.getdata(dataname='BNB/USDT', name="BNBUSDT",
+                     timeframe=bt.TimeFrame.Minutes, fromdate=hist_start_date,
+                     compression=1, ohlcv_limit=50, drop_newest=True)  # , historical=True)
 
-btc = store.getdata(dataname='BTC/USDT', name="BTCUSDT",
-                    timeframe=bt.TimeFrame.Minutes, fromdate=hist_start_date,
-                    compression=1, ohlcv_limit=500, drop_newest=True)
+# Add the feed
+cerebro.adddata(data)
 
-eth = store.getdata(dataname='ETH/USDT', name="ETHUSDT",
-                    timeframe=bt.TimeFrame.Minutes, fromdate=hist_start_date,
-                    compression=1, ohlcv_limit=500, drop_newest=True)
-
-cerebro.adddata(btc, name='btc')
-cerebro.addstrategy(TestStrategy)
-cerebro.addsizer(bt.sizers.PercentSizer, percents=99.999)
+# Run the strategy
 cerebro.run()

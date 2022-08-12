@@ -6,9 +6,12 @@ import logging
 LOG_FORMAT = "[%(levelname)s]-[%(asctime)s]-[%(pathname)s]-[%(funcName)s]-[%(lineno)d]-%(message)s"
 DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
 logging.basicConfig(level=logging.INFO, format=LOG_FORMAT, datefmt=DATE_FORMAT)
+# VPN代理信息
+VPN_PROXIES = {'https': "http://127.0.0.1:7890", 'http': "http://127.0.0.1:7890"}
+# 币安模拟盘
 BINANCE_API_KEY = 'LyfDlsb6cKO6swfTqjMygvU6ByXVQb5Ip2CI1c1qDl2H70mgmAZP5eThCDNfwlc7'
 BINANCE_SECRET_KEY = 'w29CUexJ0RS9DSdmtdrAFRXPpQWqDYoJGhzH5a7rzjIlAkXJ1eXEkQpZIeIDoZcw'
-# 实盘
+# 币安实盘
 BINANCE_API_KEY_REAL = 'U8Ow8FNq11LuROI0eaR1Pg2kJVD9WlGTlvW6M6yhi3MhwLUZYBcfGAuG4J0dspxy'
 BINANCE_SECRET_KEY_REAL = 'wneYhnDDYXAqF6cQ8Ngkd8aKnOpm8piktJqJC9EdvMCGZfhM3wBMZJZuPy6KRBAF'
 # 工具路径
