@@ -9,7 +9,7 @@ def test_load_data():
 
 
 def test_bath_down_load_data():
-    symbols = ['BTC', 'ETH', 'OP', 'ENS', 'KNC', 'APE']
+    symbols = constant.coin_symbol
     intervals = ['1d', '5m', '15m', '30m', '1h', '4h']
     data_util.bath_down_load_data(symbols, intervals)
 
