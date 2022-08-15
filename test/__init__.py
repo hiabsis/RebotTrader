@@ -1,96 +1,39 @@
-from ccxtbt import CCXTStore
-import backtrader as bt
-from datetime import datetime, timedelta
-import json
-import setting
-from strategy import sma_cross
+##最小二乘法
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.optimize import leastsq
 
-cerebro = bt.Cerebro(quicknotify=True)
+plt.rcParams['font.sans-serif'] = ['SimHei']
 
-config = {
-    'apiKey': setting.BINANCE_API_KEY,
-    'secret': setting.BINANCE_SECRET_KEY,
-    'timeout': 15000,
-    'enableRateLimit': True,
-    'verbose': True,
-
-    'proxies': {'https': "http://127.0.0.1:7890", 'http': "http://127.0.0.1:7890"}
-}
-store = CCXTStore(exchange='binance', currency='USDT', config=config, retries=5, debug=False, sandbox=True)
+Xi = np.array([1, 2, 3])
+Yi = np.array([1, 3, 3])
 
 
-class TestStrategy(bt.Strategy):
-
-    def __init__(self):
-
-        self.sma = bt.indicators.SMA(self.data, period=21)
-
-    def next(self):
-
-        # Get cash and balance
-        # New broker method that will let you get the cash and balance for
-        # any wallet. It also means we can disable the getcash() and getvalue()
-        # rest calls before and after next which slows things down.
-
-        # NOTE: If you try to get the wallet balance from a wallet you have
-        # never funded, a KeyError will be raised! Change LTC below as approriate
-        if self.live_data:
-            cash, value = self.broker.get_wallet_balance('BNB')
-        else:
-            # Avoid checking the balance during a backfill. Otherwise, it will
-            # Slow things down.
-            cash = 'NA'
-            return  # 仍然处于历史数据回填阶段，不执行逻辑，返回
-
-        for data in self.datas:
-            print('{} - {} | Cash {} | O: {} H: {} L: {} C: {} V:{} SMA:{}'.format(data.datetime.datetime(),
-                                                                                   data._name, cash, data.open[0],
-                                                                                   data.high[0], data.low[0],
-                                                                                   data.close[0], data.volume[0],
-                                                                                   self.sma[0]))
-
-    def notify_data(self, data, status, *args, **kwargs):
-        dn = data._name
-        dt = datetime.now()
-        msg = 'Data Status: {}'.format(data._getstatusname(status))
-        print(dt, dn, msg)
-        if data._getstatusname(status) == 'LIVE':
-            self.live_data = True
-        else:
-            self.live_data = False
+def func(p, x):
+    k, b = p
+    return k * x + b
 
 
-broker_mapping = {
-    'order_types': {
-        bt.Order.Market: 'market',
-        bt.Order.Limit: 'limit',
-        bt.Order.Stop: 'stop-loss',
-        bt.Order.StopLimit: 'stop limit'
-    },
-    'mappings': {
-        'closed_order': {
-            'key': 'status',
-            'value': 'closed'
-        },
-        'canceled_order': {
-            'key': 'result',
-            'value': 1}
-    }
-}
-broker = store.getbroker(broker_mapping=broker_mapping)
-cerebro.setbroker(broker)
+def error(p, x, y):
+    return func(p, x) - y
 
-hist_start_date = datetime.utcnow() - timedelta(minutes=50)
 
-btc = store.getdata(dataname='BTC/USDT', name="BTCUSDT",
-                    timeframe=bt.TimeFrame.Minutes, fromdate=hist_start_date,
-                    compression=1, ohlcv_limit=500, drop_newest=True)
+p0 = [1, 1]
 
-eth = store.getdata(dataname='ETH/USDT', name="ETHUSDT",
-                    timeframe=bt.TimeFrame.Minutes, fromdate=hist_start_date,
-                    compression=1, ohlcv_limit=500, drop_newest=True)
+Para = leastsq(error, p0, args=(Xi, Yi))
 
-cerebro.adddata(btc, name='btc')
-cerebro.addstrategy(TestStrategy)
-cerebro.addsizer(bt.sizers.PercentSizer, percents=99.999)
-cerebro.run()
+k, b = Para[0]
+print("k=", k, "b=", b)
+print("cost：" + str(Para[1]))
+print("求解的拟合直线为:")
+print("y=" + str(round(k, 2)) + "x+" + str(round(b, 2)))
+
+plt.figure(figsize=(8, 6))
+plt.scatter(Xi, Yi, color="green", label="样本数据", linewidth=2)
+
+x = np.array([1, 2, 3])
+y = k * x + b
+plt.plot(x, y, color="red", label="拟合直线", linewidth=2)
+plt.title('y={}+{}x'.format(b, k))
+plt.legend(loc='lower right')
+plt.show()

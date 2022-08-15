@@ -10,6 +10,8 @@ Yi = np.array([1, 3, 3, 5])
 
 
 def func(p, x):
+    print(p)
+    print(type(p))
     k, b = p
     return k * x + b
 

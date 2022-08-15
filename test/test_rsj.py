@@ -1,6 +1,8 @@
 import unittest
 
-from strategy.rsj import *
+import strategy.good.rsj as rsj
+from util import data_util
+import actuator
 
 
 class TestCase(unittest.TestCase):
@@ -10,4 +12,4 @@ class TestCase(unittest.TestCase):
         self.assertEqual(True, True)  # add assertion here
 
     def test_rsj_v1(self):
-        strategy.run(self.data, RsjV1Strategy, is_show=True, is_log=True)
+        actuator.run(self.data, rsj.RSJV1Strategy)

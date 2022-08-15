@@ -15,7 +15,8 @@ BINANCE_SECRET_KEY_REAL = 'wneYhnDDYXAqF6cQ8Ngkd8aKnOpm8piktJqJC9EdvMCGZfhM3wBMZ
 
 wk_img_path = project_root + "\\static\\env\\wkhtmltopdf\\bin\\wkhtmltoimage.exe"
 save_analyze_path = project_root + "\\static\\analyze"
-date_root_path = project_root + "\\static\\data"
+# 数据所在路径
+date_root_path = "D:\\work\\data"
 image_root_path = project_root + "\\static\\images\\"
 # 钉钉的群机器人token
 ding_talk_monitor_robot_access_token = "a5ce65816e68fc14fa61a80085eb85bb1ca1f0610119399cb5bf8630063b7e49"

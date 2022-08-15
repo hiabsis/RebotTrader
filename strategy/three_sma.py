@@ -1,7 +1,7 @@
 import backtrader as bt
 
 from strategy import run_strategy
-from util import load_csv_data
+
 
 
 class ThreeMovingAverage(bt.Strategy):

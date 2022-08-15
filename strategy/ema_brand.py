@@ -3,14 +3,12 @@ from indicator import ema
 
 
 class EmaBrandStrategy(bt.Strategy):
-
     params = dict(
         rend_period=20,
         top_ratio=1.1,
         low_ratio=0.9,
         is_log=False
     )
-
 
     def log(self, txt, dt=None):
         if self.p.is_log:

@@ -1,8 +1,10 @@
 from hyperopt import hp
 
 import strategy
-from strategy.art import *
+from strategy.good.art import *
 from util import data_util
+import actuator
+import analyze
 
 
 def test_opt_dynamic_atr_strategy_v2():
@@ -48,7 +50,8 @@ def test_dynamic_atr_strategy_v2():
         "stop_loss": 0.5121362175837294,
         "take_profit": 0.3560544958062028
     }
-    strategy.run_strategy(data, create_dynamic_atr_strategy_v2, params=params, is_show=True)
+    # actuator.run(data, DynamicAtrStrategyV2, params=params)
+    analyze.bokeh_analyze_plot(data, DynamicAtrStrategyV2, params)
 
 
 def test_create_continue_down_atr_strategy():
@@ -75,4 +78,4 @@ def test_create_dynamic_art():
 
 data = data_util.get_local_generic_csv_data('ETH', '1h')
 if __name__ == '__main__':
-    test_create_dynamic_art()
+    test_dynamic_atr_strategy_v2()
