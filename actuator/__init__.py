@@ -85,7 +85,14 @@ def create_default_cerebro(cash=10000.0, commission=0.01, stake=100, is_coc=True
     # 设置初始金额
     cerebro.broker.set_cash(cash)
     # 设置手续费
-    comminfo = CommInfoFractional(commission=commission)
+    # 设置杠杆
+    # comminfo = CommInfoFractional(
+    #     commission=commission * 1000.0 * 100.0 / 2,  # SYMBOL_COMM[symbol_name]为货币对的点差，/2 ：变成单边点差
+    #     margin=1,  # 必须为1
+    #     automargin=1000,  # 不同货币的保证金可以使用公式计算得出
+    #     mult=1000.0 * 1.0)  # 100是杠杆的倍数，1000固定)
+    comminfo = CommInfoFractional(
+        commission=commission)  # 100是杠杆的倍数，1000固定)
     cerebro.broker.addcommissioninfo(comminfo)
     return cerebro
 

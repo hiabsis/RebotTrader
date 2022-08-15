@@ -106,3 +106,18 @@ def read_json(path, name=None):
     if name:
         return json.load(open(path, 'r', encoding="utf-8"))[name]
     return json.load(open(path, 'r', encoding="utf-8"))
+
+
+def save_json(output, data):
+    with open(output, 'w', encoding='utf-8') as f:
+        json.dump(data, f, ensure_ascii=False)
+
+
+if __name__ == '__main__':
+    params_list = {
+        '11': 1212,
+        'sss': '1212',
+        "nn": []
+    }
+    output = 'D:\\work\\git\\RebotTrader' + "\\static\\params\\" + f'MartinStrategy' + ".json"
+    save_json(output, params_list)
