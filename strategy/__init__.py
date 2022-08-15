@@ -127,14 +127,14 @@ def get_data(path):
 
 class Optimizer:
 
-    def __init__(self, data, space, create_strategy_func, max_evals=500, is_send_ding_task=False, strategy_name=''):
+    def __init__(self, data, space, create_strategy_func, max_evals=500, is_send_ding_task=True, strategy_name=''):
         self.data = data
         self.max_evals = max_evals
         self.is_send_ding_task = is_send_ding_task
         self.params = None
         self.cash = 10000
         self.space = space
-        self.strategy_name = ''
+        self.strategy_name = strategy_name
         self.create_strategy_func = create_strategy_func
         self.value = 0
 
@@ -142,14 +142,14 @@ class Optimizer:
         try:
 
             cerebro = run_strategy(create_strategy_func=self.create_strategy_func, data=self.data,
-                                   cash=self.cash, params=params, is_update_strategy=True)
+                                   cash=self.cash, params=params)
             # 记录更加优异的策略参数
             if self.value < cerebro.broker.getvalue():
                 self.value = cerebro.broker.getvalue()
                 self.params = params
                 info = {
                     '优化策略': self.strategy_name,
-                    '数据源': self.data._dataname,
+
                     '收益率': f"{(self.value - self.cash) / self.cash * 100} %",
                     '参数': str(self.params),
 
@@ -157,7 +157,7 @@ class Optimizer:
                 print(info)
             return -cerebro.broker.getvalue()
         except Exception as r:
-            print('未知错误 %s' % r)
+            logging.error('未知错误 %s' % r)
         return 0
 
     def run(self):

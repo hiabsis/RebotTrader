@@ -10,7 +10,7 @@ from util import to_json, data_util
 loop = asyncio.get_event_loop()
 
 
-def run(data, strategy, strategy_name, params=None, is_show=True, is_log=True):
+def run(data, strategy, strategy_name=None, params=None, is_show=True, is_log=True):
     """
     运行策略
     :param is_log: 是否记录日志
@@ -85,8 +85,16 @@ def create_default_cerebro(cash=10000.0, commission=0.01, stake=100, is_coc=True
     # 设置初始金额
     cerebro.broker.set_cash(cash)
     # 设置手续费
-    cerebro.broker.setcommission(commission=commission)
+    comminfo = CommInfoFractional(commission=commission)
+    cerebro.broker.addcommissioninfo(comminfo)
     return cerebro
 
 
+class CommInfoFractional(backtrader.CommissionInfo):
+    """
+    支持小数点的仓位
+    """
 
+    def getsize(self, price, cash):
+        '''Returns fractional size for cash operation @price'''
+        return self.p.leverage * (cash / price)
