@@ -33,6 +33,7 @@ def get_stock_codes(date=None):
         delta = 1
         while 0 == len(stock_df):
             stock_df = bs.query_all_stock(datetime.date.today() - datetime.timedelta(days=delta)).get_data()
+            print(stock_df)
             delta += 1
 
     # 注销登录
