@@ -3,11 +3,11 @@
   "binance": {
     "apikey": "your api key",
     "secret": "your api secret",
-    "testorders": true
+    "testorders": True
   },
   "bitmex": {
     "apikey": "your api key",
     "secret": "your api secret",
-    "testorders": true
+    "testorders": True
   }
 }

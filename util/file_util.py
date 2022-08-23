@@ -114,3 +114,14 @@ def read_json(path, name=None):
     if name:
         return json.load(open(path, 'r', encoding="utf-8"))[name]
     return json.load(open(path, 'r', encoding="utf-8"))
+
+
+def write_json(path, load_dict):
+    """
+    文件写入json
+    :param path:
+    :param load_dict:
+    :return:
+    """
+    with open(path, 'w') as write_f:
+        write_f.write(json.dumps(load_dict, indent=4, ensure_ascii=False))

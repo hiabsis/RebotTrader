@@ -2,15 +2,15 @@ import asyncio
 
 import backtrader
 import logging as log
+import strategy as st
 
-import actuator
 from strategy.good.art import AtrStrategy
 from util import to_json, data_util
 
 loop = asyncio.get_event_loop()
 
 
-def run(data, strategy, strategy_name, params=None, is_show=True, is_log=True):
+def run(data, strategy, strategy_name=None, params=None, is_show=True, is_log=True):
     """
     运行策略
     :param is_log: 是否记录日志
@@ -21,6 +21,8 @@ def run(data, strategy, strategy_name, params=None, is_show=True, is_log=True):
     :param strategy_name: 策略名称
     :return:
     """
+    if strategy_name is None:
+        strategy_name = st.get_strategy_name(strategy, data)
     cerebro = create_default_cerebro()
     cerebro.addstrategy(strategy, params=params)
     cash = cerebro.broker.getcash()
@@ -87,6 +89,4 @@ def create_default_cerebro(cash=10000.0, commission=0.01, stake=100, is_coc=True
     # 设置手续费
     cerebro.broker.setcommission(commission=commission)
     return cerebro
-
-
 

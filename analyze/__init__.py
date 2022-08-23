@@ -1,25 +1,12 @@
-import datetime
-import logging
 import os
-import time
-import asyncio
+import webbrowser
 import backtrader as bt
 import quantstats
-import webbrowser
-import setting
-import backtrader
-import pandas
-import pyfolio
-import matplotlib.ticker as ticker
-import matplotlib.pyplot as plt
+import actuator
 from backtrader_plotting import Bokeh
 from backtrader_plotting.schemes import Tradimo
 from setting import save_analyze_path
-from utils import send_text_to_dingtalk, to_json, generate_random_str, \
-    timestamp2str
-from util import file_util, data_util
-import actuator
-from strategy.good import art
+from util import file_util
 
 
 def simple_analyze_plot(data, s, params=None, is_show=False, output=None):
@@ -68,7 +55,7 @@ def pyfolio_analyze_plot(data, strategy, params=None, title='Returns Sentiment',
 
 
 def get_default_file_name(strategy, resource):
-    return str(art.AtrStrategy).split('.')[-1].split('\'')[0] + "_" + str(data._dataname).split('\\')[-1].split('.')[0]
+    return str(strategy).split('.')[-1].split('\'')[0] + "_" + str(resource._dataname).split('\\')[-1].split('.')[0]
 
 
 def bokeh_analyze_plot(data,
@@ -117,13 +104,4 @@ def bokeh_analyze_plot(data,
     pass
 
 
-if __name__ == '__main__':
-    data = data_util.get_local_generic_csv_data('BNB', '1h')
-    params = dict(
-        art_period=150,
-        art_low=150,
-    )
-    pyfolio_analyze_plot(data, art.AtrStrategy)
-    # bokeh_analyze_plot(data, art.AtrStrategy)
-    # name = get_default_file_name(art.AtrStrategy, data)
-    # print(name)
+
