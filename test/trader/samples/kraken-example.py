@@ -1,14 +1,13 @@
 from ccxtbt import CCXTStore
 import backtrader as bt
 from datetime import datetime, timedelta
-import json
-import setting
+import logging
 
 
 class TestStrategy(bt.Strategy):
 
     def __init__(self):
-
+        logging.info("开始运行策略")
         self.sma = bt.indicators.SMA(self.data, period=21)
 
     def next(self):
@@ -21,14 +20,14 @@ class TestStrategy(bt.Strategy):
         # NOTE: If you try to get the wallet balance from a wallet you have
         # never funded, a KeyError will be raised! Change LTC below as approriate
         if self.live_data:
-            cash, value = self.broker.get_wallet_balance('BNB')
+            cash, value = self.broker.get_wallet_balance('LTC')
         else:
             # Avoid checking the balance during a backfill. Otherwise, it will
             # Slow things down.
             cash = 'NA'
-            return  # 仍然处于历史数据回填阶段，不执行逻辑，返回
 
         for data in self.datas:
+            logging.info("开始交易")
             print('{} - {} | Cash {} | O: {} H: {} L: {} C: {} V:{} SMA:{}'.format(data.datetime.datetime(),
                                                                                    data._name, cash, data.open[0],
                                                                                    data.high[0], data.low[0],
@@ -46,21 +45,24 @@ class TestStrategy(bt.Strategy):
             self.live_data = False
 
 
+apikey = 'INSERT YOUR API KEY'
+secret = 'INSERT YOUR SECRET'
+
 cerebro = bt.Cerebro(quicknotify=True)
 
 # Add the strategy
 cerebro.addstrategy(TestStrategy)
 
 # Create our store
-config = {'apiKey': setting.BINANCE_API_KEY,
-          'secret': setting.BINANCE_SECRET_KEY,
-          'enableRateLimit': True,
+config = {'apiKey': apikey,
+          'secret': secret,
+          'enableRateLimit': True
           }
 
 # IMPORTANT NOTE - Kraken (and some other exchanges) will not return any values
-# for get cash or value if You have never held any BNB coins in your account.
-# So switch BNB to a coin you have funded previously if you get errors
-store = CCXTStore(exchange='binance', currency='BNB', config=config, retries=5, debug=False, sandbox=True)
+# for get cash or value if You have never held any LTC coins in your account.
+# So switch LTC to a coin you have funded previously if you get errors
+store = CCXTStore(exchange='kraken', currency='LTC', config=config, retries=5, debug=False)
 
 # Get the broker and pass any kwargs if needed.
 # ----------------------------------------------
@@ -91,7 +93,7 @@ cerebro.setbroker(broker)
 # Get our data
 # Drop newest will prevent us from loading partial data from incomplete candles
 hist_start_date = datetime.utcnow() - timedelta(minutes=50)
-data = store.getdata(dataname='BNB/USDT', name="BNBUSDT",
+data = store.getdata(dataname='LTC/USD', name="LTCUSD",
                      timeframe=bt.TimeFrame.Minutes, fromdate=hist_start_date,
                      compression=1, ohlcv_limit=50, drop_newest=True)  # , historical=True)
 

@@ -8,10 +8,11 @@ from setting import wk_img_path
 from PIL import Image
 from time import strftime, localtime
 from util import string_util
+import logging
 
 
 def print_time():
-    print(strftime("%Y-%m-%d %H:%M:%S", localtime()))
+    logging.info(strftime("%Y-%m-%d %H:%M:%S", localtime()))
     return
 
 
@@ -68,13 +69,13 @@ def html2img(html: str, output=None):
 
     if output is None:
         output = setting.image_root_path + string_util.generate_random_str(6) + ".png"
-    print(output)
+    logging(output)
     imgkit.from_file(html, output, config=cfg)
 
     return output
 
 
-def date2csv(data, file_path, head, write_type=None):
+def date2csv(data, file_path: str, head, write_type=None):
     """
     数据保存为csv
     :param write_type: 写入数据类型 a 添加 w 覆盖写
@@ -108,3 +109,12 @@ def read_json(path, name=None):
     return json.load(open(path, 'r', encoding="utf-8"))
 
 
+def write_json(path, load_dict):
+    """
+    文件写入json
+    :param path:
+    :param load_dict:
+    :return:
+    """
+    with open(path, 'w') as write_f:
+        write_f.write(json.dumps(load_dict, indent=4, ensure_ascii=False))

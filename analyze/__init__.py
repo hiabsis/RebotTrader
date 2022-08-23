@@ -1,6 +1,7 @@
 import os
 
 import backtrader
+import webbrowser
 import backtrader as bt
 import pandas
 import pyfolio
@@ -8,6 +9,8 @@ import quantstats
 import webbrowser
 
 import matplotlib.pyplot as plt
+import quantstats
+import actuator
 from backtrader_plotting import Bokeh
 from backtrader_plotting.schemes import Tradimo
 from matplotlib import ticker
@@ -16,6 +19,7 @@ from setting import save_analyze_path
 
 from util import file_util, get_default_strategy_name
 import actuator
+from util import file_util
 
 
 def simple_analyze(cerebro, name="DEFAULT_NAME"):
@@ -125,6 +129,10 @@ def pyfolio_analyze_plot(data, strategy, params=None, title='Returns Sentiment',
     return path
 
 
+def get_default_file_name(strategy, resource):
+    return str(strategy).split('.')[-1].split('\'')[0] + "_" + str(resource._dataname).split('\\')[-1].split('.')[0]
+
+
 def bokeh_analyze_plot(data,
                        strategy,
                        params=None,
@@ -195,13 +203,5 @@ def bokeh_analyze_plot(data,
     return output
     pass
 
-# if __name__ == '__main__':
-#     data = data_util.get_local_generic_csv_data('BNB', '1h')
-#     params = dict(
-#         art_period=150,
-#         art_low=150,
-#     )
-#     pyfolio_analyze_plot(data, art.AtrStrategy)
-# bokeh_analyze_plot(data, art.AtrStrategy)
-# name = get_default_file_name(art.AtrStrategy, data)
-# print(name)
+
+

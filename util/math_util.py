@@ -1,8 +1,9 @@
-##
-import numpy
+
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.optimize import leastsq
+from scipy.stats import pearsonr
+import pandas as pd
 
 
 def least_squares_lines(xi, yi, is_show=False):
@@ -12,6 +13,7 @@ def least_squares_lines(xi, yi, is_show=False):
     """
     p0 = [1, 1]
     Para = leastsq(lines_func, p0, args=(xi, yi))
+    Para = leastsq(_lines_func, p0, args=(Xi, Yi))
 
     k, b = Para[0]
     if is_show:
@@ -28,11 +30,28 @@ def least_squares_lines(xi, yi, is_show=False):
     return k, b
 
 
-def lines(p, x):
+def _lines(p, x):
     k, b = p
 
     return k * x + b
 
 
-def lines_func(p, x, y):
-    return lines(p, x) - y
+def _lines_func(p, x, y):
+    return _lines(p, x) - y
+
+
+def pearson(x: list, y: list):
+    """
+    Pearson 相关系数
+    :param x:
+    :param y:
+    :return:
+    """
+    x1 = pd.Series(x)
+    y1 = pd.Series(y)
+    p = pearsonr(x1, y1)
+    return p.statistic
+
+
+
+
