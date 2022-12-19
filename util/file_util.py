@@ -69,7 +69,7 @@ def html2img(html: str, output=None):
 
     if output is None:
         output = setting.image_root_path + string_util.generate_random_str(6) + ".png"
-    logging(output)
+
     imgkit.from_file(html, output, config=cfg)
 
     return output

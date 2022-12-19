@@ -1,15 +1,9 @@
 import datetime
-import logging
 import math
 
-import numpy
-
-import strategy.good.art as art
 import backtrader
-import util
+
 import actuator
-import analyze
-from util.math_util import least_squares_lines
 
 
 class IchimokuStrategy(backtrader.Strategy):

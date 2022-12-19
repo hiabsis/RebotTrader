@@ -4,43 +4,47 @@
 
 import backtrader as bt
 
-from main.infrastructure.utils.bt import BackTradeUtil
+from main.infrastructure.foundation.bt.actuator import Actuator
+from main.infrastructure.foundation.logging import log
 
 
 class VolumeBreakthroughIndex(bt.Indicator):
     lines = (
-        'direction',  # 涨跌方向 1 多 -1
-        'is_break',  # 交易量是否突破
+        'value',
     )
     params = (
         # 放量值
-        ('break_volume', 4),
-        # 周期
-        ('period', 5)
+        ('break_volume', 5),
+        ('break_ema', 5),
 
     )  #
-    plotinfo = dict(
-        plot=True,
-        subplot=True,  # 与价格在同一张图
-        plotname='交易量突破',
-    )
 
-    def __init__(self):
-        # ema: 交易量
-        volume_ema = bt.ind.EMA(self.data.volume, period=self.p.period)
-        open_ema = bt.ind.EMA(self.data.open, period=self.p.period)
-        close_ema = bt.ind.EMA(self.data.close, period=self.p.period)
-        self.direction = bt.ind.If(open_ema >= close_ema, 1, -1)
-        self.is_break = bt.ind.If(self.data.volume >= volume_ema * self.p.break_volume, 1, 0)
-        super(VolumeBreakthroughIndex, self).__init__()
+    # plotinfo = dict(
+    #     plot=True,
+    #     subplot=False,  # 与价格在同一张图
+    #     plotname='交易量突破',
+    # )
+
+    def next(self):
+        volume = 0
+        for i in range(self.p.break_ema):
+            volume += self.data.volume[-i - 2]
+        volume = (volume / self.p.break_ema) * self.p.break_volume
+        if self.data.volume[0] > volume:
+            self.l.value[0] = 1
+        else:
+            self.l.value[0] = 0
+        if self.data.close[0] < self.data.open[0]:
+            self.l.value[0] = -1 * self.l.value[0]
 
 
 class VolumeBreakthroughStrategy(bt.Strategy):
     def __init__(self):
-        index = VolumeBreakthroughIndex()
-        self.is_break = index.is_break
-        self.direction = index.direction
+        self.is_break = VolumeBreakthroughIndex().value
+
+    def next(self):
+        log.info(" {} {}".format(self.data.volume[0], self.is_break[0]))
 
 
 if __name__ == '__main__':
-    csv = BackTradeUtil.load_csv("ETHUSDT", "5m")
+    Actuator.run("ETHUSDT", '3m', VolumeBreakthroughStrategy)

@@ -31,7 +31,7 @@ def str2timestamp(date: str, fmt="%Y-%m-%d %H:%M:%S"):
 def str2datetime(date_str: str, fmt="%Y-%m-%d %H:%M:%S"):
     fmt.split(".")
     return datetime.datetime.strptime(date_str, fmt)
-    [].ap
+
 
 if __name__ == '__main__':
     print(datetime.datetime.now() + datetime.timedelta(minutes=-1, hours=0))

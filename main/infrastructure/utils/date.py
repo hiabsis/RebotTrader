@@ -31,6 +31,14 @@ INTERVAL_SECOND_DICT = {
 
 
 class DateUtil:
+    @staticmethod
+    def add_time(date, minutes=0, hour=0, days=0):
+        return date + datetime.timedelta(minutes=minutes, hours=hour, days=days)
+
+    @staticmethod
+    def str2datetime(date_str: str, fmt="%Y-%m-%d %H:%M:%S"):
+        fmt.split(".")
+        return datetime.datetime.strptime(date_str, fmt)
 
     @staticmethod
     def add_minutes(minute: int, date: datetime.datetime = datetime.datetime.now()):
