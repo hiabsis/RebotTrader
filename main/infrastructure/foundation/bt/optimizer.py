@@ -62,7 +62,7 @@ class MuOptimizer:
         self.end = end
 
     def target_func(self, params):
-        cerebro = MuActuator.run(self.strategy, '1d', start_time=self.start, end_time=self.end,
+        cerebro = MuActuator.run(self.strategy, self.interval, start_time=self.start, end_time=self.end,
                                  plot=False, params=params)
         if self.asset < cerebro.broker.getvalue():
             self.asset = cerebro.broker.getvalue()

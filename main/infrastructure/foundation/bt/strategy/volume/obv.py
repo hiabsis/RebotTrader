@@ -1,7 +1,7 @@
 import backtrader as bt
 from hyperopt import hp
 
-from main.infrastructure.foundation.bt.optimizer import MuOptimizer
+from main.infrastructure.foundation.bt.actuator import MuActuator
 from main.infrastructure.foundation.logging import log
 
 
@@ -35,12 +35,12 @@ class SMAStrategy(bt.Strategy):
         rebal_monthday=[1],  # 每月1日执行再平衡
         num_volume=20,  # 成交量取前100名
         period=5,
-        buy_point=0.9,
-        sell_point=1.1
+        buy_point=1.708,
+        sell_point=1.5
     )
 
     # 日志函数
-    def log(self, txt, dt=None, doprint=False):
+    def log(self, txt, dt=None, doprint=True):
         """ 日志函数，用于统一输出日志格式 """
 
         if doprint:
@@ -64,7 +64,7 @@ class SMAStrategy(bt.Strategy):
         # 移动平均线指标
         self.sma = {d: bt.ind.SMA(d, period=self.p.period) for d in self.stocks}
         # obv
-        # self.obv = {d: bt.talib.OBV(self.stocks.close, self.stocks.volume) for d in self.stocks}
+        self.obv = {d: bt.talib.OBV(d.close, d.volume) for d in self.stocks}
         # 定时器
         self.add_timer(
             when=bt.Timer.SESSION_START,
@@ -111,6 +111,7 @@ class SMAStrategy(bt.Strategy):
         # 取消以往所下订单（已成交的不会起作用）
         for order in self.order_list:
             self.cancel(order)
+
         # 按成交量从大到小排序
         self.ranks = [d for d in self.stocks if d.close[0] > 1 and d.close[0] > self.sma[d][0]]
         self.ranks.sort(key=lambda d: d.volume, reverse=True)  # 按成交量从大到小排序
@@ -133,6 +134,7 @@ class SMAStrategy(bt.Strategy):
                  (len(self.ranks), targetvalue, self.broker.getvalue()))
 
         for d in self.ranks:
+            print(self.obv[d][0], d.close[0], d._name)
             size = int(
                 abs((self.broker.getvalue([d]) - targetvalue) / d.open[1]))
 
@@ -152,24 +154,17 @@ class SMAStrategy(bt.Strategy):
 
 
 space = dict(
-    buy_point=hp.uniform("buy_point", 0.5, 4),
-    sell_point=hp.uniform("sell_point", 0.5, 2)
+    buy_point=hp.uniform("buy_point", 1, 10),
+    sell_point=hp.uniform("sell_point", 0.1, 1)
 )
 
 interval = "1d"
 start = "2020-12-20 00:00:00"
 end = "2022-12-20 00:00:00"
-params = dict(
-    rebal_monthday=[1],  # 每月1日执行再平衡
-    num_volume=20,  # 成交量取前100名
-    period=5,
-    buy_point=0.9,
-    sell_point=1.1
-)
-# MuActuator.run(SMAStrategy, '1d', start_time=start, end_time=end, plot=False, params=params)
+MuActuator.run(SMAStrategy, '1d', start_time=start, end_time=end, plot=False)
 
-optimizer = MuOptimizer()
-optimizer.set_space(space)
-optimizer.set_strategy(SMAStrategy)
-optimizer.set_date(interval=interval, start=start, end=end)
-optimizer.run(evals=100)
+# optimizer = MuOptimizer()
+# optimizer.set_space(space)
+# optimizer.set_strategy(SMAStrategy)
+# optimizer.set_date(interval=interval, start=start, end=end)
+# optimizer.run(evals=100)
