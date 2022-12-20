@@ -1,3 +1,5 @@
+from scipy.constants import hp
+
 from strategy import *
 
 gloVar = dict(

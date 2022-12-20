@@ -37,6 +37,8 @@ class DateUtil:
 
     @staticmethod
     def str2datetime(date_str: str, fmt="%Y-%m-%d %H:%M:%S"):
+        if date_str is None:
+            return None
         fmt.split(".")
         return datetime.datetime.strptime(date_str, fmt)
 

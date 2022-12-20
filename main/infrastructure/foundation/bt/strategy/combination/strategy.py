@@ -1,15 +1,24 @@
-"""
- 量价结合的选股因子的构建
-
-
-"""
+import glob
+import os.path  # 管理路径
+from datetime import datetime
 
 import backtrader as bt
+import pandas as pd
+from backtrader.feeds import PandasData  # 用于扩展DataFeed
 
-import util.math_util as mu
+
+# class PandasDataExtend(PandasData):
+#     # 增加线
+#     lines = ('pe', 'roe', 'marketdays')
+#     params = (('pe', 15),
+#               ('roe', 16),
+#               ('marketdays', 17),)  # 上市天数
+#
+#
 
 
-class TurnCloseStrategy(bt.Strategy):
+
+class Strategy(bt.Strategy):
     params = dict(
         rebal_monthday=[1],  # 每月1日执行再平衡
         num_volume=100,  # 成交量取前100名
@@ -32,17 +41,12 @@ class TurnCloseStrategy(bt.Strategy):
 
         # 移动平均线指标
         self.sma = {d: bt.ind.SMA(d, period=self.p.period) for d in self.stocks}
-        # 选股指标
-        self.sma = {d: bt.ind.SMA(d, period=self.p.period) for d in self.stocks}
-        # 相关系数
-        self.sma = {d: bt.ind.SMA(d, period=self.p.period) for d in self.stocks}
 
         # 定时器
         self.add_timer(
             when=bt.Timer.SESSION_START,
             monthdays=self.p.rebal_monthday,  # 每月1号触发再平衡
             monthcarry=True,  # 若再平衡日不是交易日，则顺延触发notify_timer
-
         )
 
     def notify_timer(self, timer, when, *args, **kwargs):
@@ -50,6 +54,13 @@ class TurnCloseStrategy(bt.Strategy):
         # 只在5，9，11月的1号执行再平衡
         if self.data0.datetime.date(0).month in [5, 9, 11]:
             self.rebalance_portfolio()  # 执行再平衡
+
+    # def next(self):
+
+    #     print('next 账户总值', self.data0.datetime.datetime(0), self.broker.getvalue())
+    #     for d in self.stocks:
+    #         if(self.getposition(d).size!=0):
+    #             print(d._name, '持仓' ,self.getposition(d).size)
 
     def notify_order(self, order):
         if order.status in [order.Submitted, order.Accepted]:
@@ -95,16 +106,14 @@ class TurnCloseStrategy(bt.Strategy):
 
         # 最终标的选取过程
         # 1 先做排除筛选过程
-        # 可交易的股票 ，系数小于-0.7
         self.ranks = [d for d in self.stocks if
                       len(d) > 0  # 重要，到今日至少要有一根实际bar
                       and d.marketdays > 3 * 365  # 到今天至少上市
                       # 今日未停牌 (若去掉此句，则今日停牌的也可能进入，并下订单，次日若复牌，则次日可能成交）（假设原始数据中已删除无交易的记录)
                       and d.datetime.date(0) == self.currDate
                       and d.roe >= 0.1
-                      and d.pe < 100
-                      and d.pe > 0
-                      and len(d) >= self.p.period
+                      and 100 > d.pe > 0
+                      and len(d) >= self.p.period  # 最小期，至少需要5根bar
                       and d.close[0] > self.sma[d][1]
                       ]
 
@@ -130,13 +139,13 @@ class TurnCloseStrategy(bt.Strategy):
         targetvalue = buypercentage * self.broker.getvalue()
         # 为保证先卖后买，股票要按持仓市值从大到小排序
         self.ranks.sort(key=lambda d: self.broker.getvalue([d]), reverse=True)
-
+        self.log('下单, 标的个数 %i, targetvalue %.2f, 当前总市值 %.2f' %
+                 (len(self.ranks), targetvalue, self.broker.getvalue()))
 
         for d in self.ranks:
             # 按次日开盘价计算下单量，下单量是100的整数倍
-
-            size = abs((self.broker.getvalue([d]) - targetvalue) / d.open[1])
-            self.log("下单 {} size {} {} {}".format(d._name, size, self.broker.getvalue([d]), targetvalue))
+            size = int(
+                abs((self.broker.getvalue([d]) - targetvalue) / d.open[1] // 100 * 100))
             validday = d.datetime.datetime(1)  # 该股下一实际交易日
             if self.broker.getvalue([d]) > targetvalue:  # 持仓过多，要卖
                 # 次日跌停价近似值
@@ -155,79 +164,67 @@ class TurnCloseStrategy(bt.Strategy):
         self.lastRanks = self.ranks  # 跟踪上次买入的标的
 
 
-class FilterStockIndex(bt.Indicator):
-    """
-    选股指标
-    新股不买、涨停不买、跌停不卖、停牌不调 费ST
-    """
-    lines = ('value',)  # value 代表是否能交易
-    params = (
-        # 股票上市后200天内不买
-        ('new_stock_period', 200),
+# ##########################
+# # 主程序开始
+# #########################
+cerebro = bt.Cerebro(stdstats=False)
+cerebro.addobserver(bt.observers.Broker)
+cerebro.addobserver(bt.observers.Trades)
+# cerebro.broker.set_coc(True)  # 以订单创建日的收盘价成交
+# cerebro.broker.set_coo(True) # 以次日开盘价成交
+
+
+datadir = './dataswind'  # 数据文件位于本脚本所在目录的data子目录中
+datafilelist = glob.glob(os.path.join(datadir, '*'))  # 数据文件路径列表
+
+maxstocknum = 20  # 股票池最大股票数目
+# 注意，排序第一个文件必须是指数数据，作为时间基准
+datafilelist = datafilelist[0:maxstocknum]  # 截取指定数量的股票池
+print(datafilelist)
+# 将目录datadir中的数据文件加载进系统
+
+
+for fname in datafilelist:
+    df = pd.read_csv(
+        fname,
+        skiprows=0,  # 不忽略行
+        header=0,  # 列头在0行
+    )
+    # df = df[~df['交易状态'].isin(['停牌一天'])]  # 去掉停牌日记录
+    df['date'] = pd.to_datetime(df['date'])  # 转成日期类型
+    df = df.dropna()
+
+    # print(df.info())
+    # print(df.head())
+
+    data = PandasDataExtend(
+        dataname=df,
+        datetime=0,  # 日期列
+        open=2,  # 开盘价所在列
+        high=3,  # 最高价所在列
+        low=4,  # 最低价所在列
+        close=5,  # 收盘价价所在列
+        volume=6,  # 成交量所在列
+        pe=7,
+        roe=8,
+        marketdays=9,
+        openinterest=-1,  # 无未平仓量列
+        fromdate=datetime(2002, 4, 1),  # 起始日2002, 4, 1
+        todate=datetime(2015, 12, 31),  # 结束日 2015, 12, 31
+        plot=False
 
     )
-    # 图中不显示
-    plotinfo = dict(plot=False)
+    ticker = fname[-13:-4]  # 从文件路径名取得股票代码
 
-    def __init__(self, **kwargs):
+    cerebro.adddata(data, name=ticker)
 
-        super(FilterStockIndex, self).__init__()
-
-    def next(self):
-        # # 新股不买
-        # if self.star < self.p.new_stock_period:
-        #     self.star += 1
-        #     self.l.value[0] = False
-        #     return
-        # 当天停牌
-        if self.data.tradestatus[0] == 1:
-            self.l.value[0] = True
-            return
-        # 是否涨停  // 跌停
-        if abs(self.data.pctChg[0] > 9.9):
-            self.l.value[0] = True
-            return
-        # 非ST
-        if self.data.isST[0] == 1:
-            self.l.value[0] = True
-            return
-        self.l.value[0] = False
-
-
-class TurnCloseIndex(bt.Indicator):
-    """
-    收盘价与换手率系数指标
-
-    """
-    lines = ('value',)  # value 收盘价与换手率系数指标
-    params = (
-        # 股票上市后200天内不买
-        ('period', 200),
-
-    )  # 与价格在同一张图
-    plotinfo = dict(subplot=True)
-
-    def __init__(self, **kwargs):
-        print(kwargs)
-        # 当前所在周期
-        self.star = 0
-        pass
-
-    def next(self):
-        self.star += 1
-        if self.star < self.p.period:
-            self.l.value[0] = 0
-            return
-
-            # 收盘价
-        close = []
-        # 换手率
-        turn = []
-        for i in range(self.p.period):
-            close.append(self.data.close[-i])
-            turn.append(self.data.turn[-i])
-
-        close.reverse()
-        turn.reverse()
-        # 计算系数
-        self.l.value[0] = mu.pearson(close, turn)
+cerebro.addstrategy(Strategy)
+startcash = 10000000
+cerebro.broker.setcash(startcash)
+# 防止下单时现金不够被拒绝。只在执行时检查现金够不够。
+cerebro.broker.set_checksubmit(False)
+comminfo = StampDutyCommissionScheme(stamp_duty=0.001, commission=0.001)
+cerebro.broker.addcommissioninfo(comminfo)
+results = cerebro.run()
+print('最终市值: %.2f' % cerebro.broker.getvalue())
+# cerebro.plot()

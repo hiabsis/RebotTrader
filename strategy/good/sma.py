@@ -1,5 +1,3 @@
-import datetime
-
 import backtrader
 from hyperopt import hp
 
@@ -17,6 +15,8 @@ class SmaStrategy(backtrader.Strategy):
         fast=50,
         slow=200
     )
+
+
 
     def __init__(self, params=None):
         self.handle_params(params)

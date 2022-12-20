@@ -87,8 +87,13 @@ class BinanceClint(object):
                 return
             klines = []
             while True:
+                if end <= start:
+                    return
                 response = client.futures_klines(symbol=symbol, interval=interval, startTime=start,
                                                  endTime=end)
+                if response is None or response == [] or end >= int(
+                        time.mktime(datetime.datetime.now().timetuple())) * 1000:
+                    break
                 for res in response:
                     k_line = KLineDTO()
                     k_line.build(res, symbol, interval)
@@ -100,6 +105,7 @@ class BinanceClint(object):
                     break
                 end = response[0][0] + DateUtil.interval2second(interval) * 1000
                 start = response[0][0] + DateUtil.interval2second(interval) * 1000 * 300
+
                 log.info("下载 {}".format(klines[-1][0]))
             FileUtil.data2csv(klines, KLINES_HEAD, file_path, 'a')
         else:
@@ -131,4 +137,8 @@ class BinanceClint(object):
 
 
 if __name__ == '__main__':
-    BinanceClint.download_kline("DOTUSDT", "5m")
+    symbols = BinanceClint.query_symbols()
+    for symbol in symbols:
+        BinanceClint.download_kline(symbol, "1d")
+        BinanceClint.download_kline(symbol, "4h")
+

@@ -1,5 +1,6 @@
 import backtrader as bt
 
+from main.infrastructure.utils.date import DateUtil
 from main.resource.config import KLINES_PATH
 
 
@@ -30,8 +31,8 @@ class BackTradeUtil:
         return bt.feeds.GenericCSVData(
             dataname=path,
             nullvalue=0.0,
-            fromdate=start,
-            todate=end,
+            fromdate=DateUtil.str2datetime(start),
+            todate=DateUtil.str2datetime(end),
             dtformat="%Y-%m-%d %H:%M:%S",
             timeframe=interval_type,
             datetime=0,
