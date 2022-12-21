@@ -1,25 +1,20 @@
 import os
+import webbrowser
 
 import backtrader
-import webbrowser
 import backtrader as bt
+import matplotlib.pyplot as plt
 import pandas
 import pyfolio
 import quantstats
-import webbrowser
-
-import matplotlib.pyplot as plt
-import quantstats
-import actuator
 from backtrader_plotting import Bokeh
 from backtrader_plotting.schemes import Tradimo
 from matplotlib import ticker
 
-from setting import save_analyze_path
-
-from util import file_util, get_default_strategy_name
 import actuator
-from util import file_util
+from main.infrastructure.foundation.logging import log
+from setting import save_analyze_path
+from util import get_default_strategy_name
 
 
 def simple_analyze(cerebro, name="DEFAULT_NAME"):
@@ -92,41 +87,7 @@ def simple_analyze(cerebro, name="DEFAULT_NAME"):
     plt.show()
 
 
-def pyfolio_analyze_plot(data, strategy, params=None, title='Returns Sentiment', output=None,
-                         is_show=True):
-    """
-    可视化分析 财务数据
-    :param output:
-    :param params:
-    :param strategy:
-    :param data:
-    :param title:
-    :param is_show:
-    :return:
-    """
-    cerebro = actuator.get_default_cerebro()
-    cerebro.addstrategy(strategy, params)
-    cerebro.adddata(data)
-    cerebro.addanalyzer(bt.analyzers.PyFolio, _name='pyfolio')
-    back = cerebro.run()
-    portfolio = back[0].analyzers.getbyname('pyfolio')
-    returns, positions, transactions, gross_lev = portfolio.get_pf_items()
-    returns.index = returns.index.tz_convert(None)
-    if output is None:
-        file_name = get_default_strategy_name(strategy, data)
-        output = save_analyze_path + "\\pyfolio"
-        if not os.path.exists(output):
-            os.makedirs(output)
-        output = output + "\\" + file_name + ".html"
-    report_path = save_analyze_path + "\\html\\report.html"
-    if not os.path.exists(report_path):
-        report_path = None
-    quantstats.reports.html(returns, output=output, template_path=report_path, download_filename=output, title=title)
-    if is_show:
-        webbrowser.open(output)
-    path = file_util.html2img(output)
-    path = file_util.compress_image(path)
-    return path
+
 
 
 def get_default_file_name(strategy, resource):
@@ -202,6 +163,3 @@ def bokeh_analyze_plot(data,
     # path = file_util.compress_image(path)
     return output
     pass
-
-
-

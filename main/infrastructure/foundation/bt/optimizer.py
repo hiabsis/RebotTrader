@@ -26,12 +26,13 @@ class Optimizer:
         self.space = space
 
     def target_func(self, params):
+        log.info("调优参数 ：{}".format(params))
         cerebro = Actuator.run(data=self.data, params=params, strategy=self.strategy, plot=False)
         if self.asset < cerebro.broker.getvalue():
             self.asset = cerebro.broker.getvalue()
         return -cerebro.broker.getvalue()
 
-    def run(self, evals=1000):
+    def run(self, evals=10000):
         trials = Trials()
         self.params = fmin(fn=self.target_func, space=self.space, algo=tpe.suggest, max_evals=evals,
                            trials=trials)

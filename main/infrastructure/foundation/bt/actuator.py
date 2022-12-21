@@ -32,12 +32,11 @@ class Actuator:
     @staticmethod
     def run(strategy, data=None, symbol=None, interval=None, start_time=None, end_time=None, params=None, cerebro=None,
             plot=True):
+        cash = 100000
         if cerebro is None:
-            cerebro = Actuator.create_cerebro()
-        if params is not None:
+            cerebro = Actuator.create_cerebro(cash=cash)
             cerebro.addstrategy(strategy=strategy, params=params)
-        else:
-            cerebro.addstrategy(strategy=strategy)
+
         if data is None:
             BinanceClint.download_kline(symbol, interval)
             data = BackTradeUtil.load_csv(symbol, interval, start=start_time, end=end_time)
@@ -45,6 +44,8 @@ class Actuator:
         cerebro.run()
         if plot:
             cerebro.plot()
+        log.info('最终市值: %.2f' % cerebro.broker.getvalue())
+        log.info('收益率: %.2f' % ((cerebro.broker.getvalue() - cash) / cash * 100))
         return cerebro
 
 
@@ -77,7 +78,7 @@ class MuActuator:
 
     @staticmethod
     def run(strategy, interval=None, start_time=None, end_time=None, params=None, cerebro=None,
-            plot=True, startcash=10000000):
+            startcash=10000000, update=False, symbols=None):
         if cerebro is None:
             cerebro = bt.Cerebro(stdstats=False)
             cerebro.addobserver(bt.observers.Broker)
@@ -93,7 +94,11 @@ class MuActuator:
             cerebro.addstrategy(strategy=strategy, params=params)
         else:
             cerebro.addstrategy(strategy=strategy)
-        for symbol in BinanceClint.query_symbols():
+        if symbols is None:
+            symbols = BinanceClint.query_symbols()
+        for symbol in symbols:
+            if update:
+                BinanceClint.download_kline(symbol, interval)
             path = BackTradeUtil.local_path(symbol, interval)
             data = numpy.array(pandas.read_csv(path))
             local_date = DateUtil.str2datetime(data[0][0])
@@ -102,11 +107,6 @@ class MuActuator:
             data = BackTradeUtil.load_csv(symbol=symbol, interval=interval, start=start_time, end=end_time)
             cerebro.adddata(data, name=symbol)
         cerebro.run()
-        if plot:
-            cerebro.plot()
         log.info('最终市值: %.2f' % cerebro.broker.getvalue())
         log.info('收益率: %.2f' % ((cerebro.broker.getvalue() - startcash) / startcash * 100))
         return cerebro
-
-
-

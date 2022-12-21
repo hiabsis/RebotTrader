@@ -150,4 +150,5 @@ if __name__ == '__main__':
     optimizer.set_space(space)
     params = optimizer.run(1000)
 
+
     Actuator.run(strategy=VolumeBreakthroughStrategy, symbol="ETHUSDT", interval='1d', params=params)

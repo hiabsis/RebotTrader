@@ -4,26 +4,12 @@ from datetime import datetime
 
 import backtrader as bt
 import pandas as pd
-from backtrader.feeds import PandasData  # 用于扩展DataFeed
+
+from main.infrastructure.foundation.bt.strategy.combination import BaseStrategy
 
 
-# class PandasDataExtend(PandasData):
-#     # 增加线
-#     lines = ('pe', 'roe', 'marketdays')
-#     params = (('pe', 15),
-#               ('roe', 16),
-#               ('marketdays', 17),)  # 上市天数
-#
-#
+class Strategy(BaseStrategy):
 
-
-
-class Strategy(bt.Strategy):
-    params = dict(
-        rebal_monthday=[1],  # 每月1日执行再平衡
-        num_volume=100,  # 成交量取前100名
-        period=5,
-    )
 
     # 日志函数
     def log(self, txt, dt=None):

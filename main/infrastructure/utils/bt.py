@@ -1,10 +1,25 @@
+import os
+
 import backtrader as bt
 
+from main.infrastructure.foundation.logging import log
 from main.infrastructure.utils.date import DateUtil
-from main.resource.config import KLINES_PATH
+from main.resource.config import KLINES_PATH, ANALYZE_PATH
 
 
 class BackTradeUtil:
+    @staticmethod
+    def analyzer_path(out):
+        save_dir = "{}".format(ANALYZE_PATH)
+        file_path = "{}/{}.html".format(save_dir, out)
+        print(save_dir)
+        if not os.path.exists(save_dir):
+            os.makedirs(save_dir)
+
+        with open(file_path, 'w', encoding='utf-8') as f:
+            print(f)
+        return file_path
+
     @staticmethod
     def local_path(symbol, interval):
         return "{}/{}/{}.csv".format(KLINES_PATH, symbol, interval)
@@ -20,7 +35,7 @@ class BackTradeUtil:
         :return:
         """
         path = BackTradeUtil.local_path(symbol, interval)
-
+        log.info("加载 {} {}".format(symbol, interval))
         if interval is None:
             interval_type = bt.TimeFrame.Minutes
         elif interval.endswith('d'):
