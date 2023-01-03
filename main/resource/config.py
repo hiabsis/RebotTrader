@@ -10,3 +10,4 @@ STATIC_PATH = r"D:\work\git\RebotTrader\main\resource\static"
 KLINES_PATH = STATIC_PATH + r"\klines"
 ANALYZE_PATH = STATIC_PATH + r"\analyze"
 KLINES_HEAD = ["Time", "Open", "Close", "High", "Low", "Volume"]
+ENABLE_STRATEGY_LOG = False

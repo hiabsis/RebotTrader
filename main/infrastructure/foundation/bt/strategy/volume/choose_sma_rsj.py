@@ -144,9 +144,9 @@ class TestStrategy(bt.Strategy):
             self.close()
 
 
-interval = "3m"
-symbol = "ETHUSDT"
-start = "2022-01-01 00:00:00"
+interval = "4h"
+symbol = "BNBUSDT"
+start = "2021-01-01 00:00:00"
 end = "2022-12-21 00:00:00"
 
 
@@ -167,14 +167,13 @@ def optimizer():
 
 
 params = {'buy_rsi': 1.0498577868035641, 'period': 25, 'sell_rsi': 29.2583301692514}
-params = {'buy_rsi': 1, 'period': 14, 'sell_rsi': 30}
+params = {'buy_rsi': 1, 'period': 14.27557713839837, 'sell_rsi': 30}
 # cerebro = Actuator.run(TestStrategy, symbol=symbol, interval=interval, start_time=start, end_time=end, plot=True,
 #                        params=params)
 # Analyzer.pyfolio(cerebro, "{}-{}".format(symbol, interval))
 # params = optimizer()
-Actuator.run(TestStrategy, symbol=symbol, interval=interval, start_time=start, end_time=end, plot=False,
-             params=params)
-# symbols = BinanceClint.query_symbols()
-# for symbol in symbols:
-#     cerebro = Actuator.run(TestStrategy, symbol=symbol, interval=interval, start_time=start, end_time=end, plot=False,
-#                            params=params)
+symbols = BinanceClint.query_symbols()
+for symbol in symbols:
+    cerebro = Actuator.run(TestStrategy, symbol=symbol, interval=interval, start_time=start, end_time=end, plot=False,
+                           params=params)
+    

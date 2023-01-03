@@ -37,8 +37,11 @@ class Optimizer:
         self.params = fmin(fn=self.target_func, space=self.space, algo=tpe.suggest, max_evals=evals,
                            trials=trials)
         log.info(f'最优参数: {self.params}')
+
         return self.params
 
+def notify_op():
+    pass
 
 class MuOptimizer:
 

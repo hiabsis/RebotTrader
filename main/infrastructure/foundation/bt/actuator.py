@@ -32,7 +32,7 @@ class Actuator:
     @staticmethod
     def run(strategy, data=None, symbol=None, interval=None, start_time=None, end_time=None, params=None, cerebro=None,
             plot=True):
-        cash = 100000
+        cash = 10000000
         if cerebro is None:
             cerebro = Actuator.create_cerebro(cash=cash)
             cerebro.addstrategy(strategy=strategy, params=params)

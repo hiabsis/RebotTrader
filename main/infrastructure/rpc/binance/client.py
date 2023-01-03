@@ -136,9 +136,5 @@ class BinanceClint(object):
             FileUtil.data2csv(klines, KLINES_HEAD, file_path)
 
 
-if __name__ == '__main__':
-    symbols = BinanceClint.query_symbols()
-    for symbol in symbols:
-        BinanceClint.download_kline(symbol, "1d")
-        BinanceClint.download_kline(symbol, "4h")
+
 
